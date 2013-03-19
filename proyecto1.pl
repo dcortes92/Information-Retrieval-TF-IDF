@@ -1,5 +1,9 @@
 use File::Basename;
 
+
+#hola isaac
+
+
 @terminos;
 %vocabulario;
 $bandera_ni;
