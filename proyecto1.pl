@@ -1,4 +1,9 @@
- use File::Basename;
+use File::Basename;
+
+@terminos;
+%vocabulario;
+$bandera_ni;
+@palabras_archivo;
 
 sub open_dir{
 	my ($path) = ($_[0]);
@@ -12,10 +17,17 @@ sub open_dir{
 			open_dir($file,$hash);
 		}else{
 	   		#print $file."\n";
-	   		if($file =~ /\.id$/){
+	   		if($file =~ /\.txt$/){
 	   			&abrir_archivo($file);
-	   		}
+			}
 		}		
+	}
+	
+	print "Vocabulario\n\n";
+	print "Termino, Ni\n";
+	while (($key, $value) = each(%vocabulario)){
+     		
+     		print $key.", ".$value."\n";
 	}
 }
 
@@ -38,9 +50,9 @@ sub abrir_archivo{
 			#print $palabras[$i]."\n";
 			$temporal = $palabras[$i];
 			if (!($temporal =~ /^[0-9]+$/)){
+				$temporal =~ s/,//g;
 				push(@terminos, $temporal);
-				$terminos{$temporal}++;
-				#print $temporal,"\n";
+				$terminos{$temporal}++;			
 			}
 		}
 
@@ -48,18 +60,28 @@ sub abrir_archivo{
 	}
 	close (MYFILE);
 	
-	$largo = @terminos;
-	@sorted = sort {$b <=> $a} @terminos;
-	$primero = $sorted[0];
-	print "primero ".$primero."\n";
 	
-	open (NUEVO, '>>data.txt');
-	print NUEVO $path.";".fileparse($path).";".$largo.";".$terminos{$primero}.";";
-		foreach $palabra (sort keys (%terminos)) {
-		   print NUEVO "(".$palabra.",".$terminos{$palabra}.");";
-		}
-	print NUEVO "\n";
-	close (NUEVO); 
+	
+	#$largo = @terminos;
+	#@sorted = sort {$b <=> $a} @terminos;
+	#$primero = $sorted[0];
+	#print "primero ".$primero."\n";
+	
+	#open (NUEVO, '>>/home/daniel/Escritorio/archivos/data.txt');
+	#print NUEVO $path.";".fileparse($path).";".$largo.";".$terminos{$primero}.";";
+	#	foreach $palabra (sort keys (%terminos)) {
+	#	   print NUEVO "(".$palabra.",".$terminos{$palabra}.");";
+	#	}
+	#print NUEVO "\n";
+	#close (NUEVO); 
 }
 
-&open_dir("/home/isaac/TEC/RIT/Proyecto 1");
+sub vocabulario{
+	
+}
+
+sub uniq {
+    return keys %{{ map { $_ => 1 } @_ }};
+}
+
+&open_dir("/home/daniel/Escritorio/archivos");
