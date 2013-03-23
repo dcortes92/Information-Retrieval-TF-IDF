@@ -1,18 +1,23 @@
 use File::Basename;
 
+@stopwords;
 
-#hola isaac
-#hola mundo!!!
-
-
-@terminos;
-%vocabulario;
-$bandera_ni;
-@palabras_archivo;
+sub crear_stops{
+	my ($path) = ($_[0]);
+	open(MYFILE, $path);
+	
+	while (<MYFILE>){
+		$linea = $_;
+		chomp($linea);
+		push(@stopwords, $linea);
+	}
+	&open_dir("/home/isaac/TEC/RIT/Proyecto 1");
+	#&esta("casa");
+}
 
 sub open_dir{
 	my ($path) = ($_[0]);
-	opendir(DIR, $path) or die $!; #se abre el directorio
+	opendir(DIR, $path) or die $!;
 	my @files = grep(!/^\./,readdir(DIR));
 	closedir(DIR);
 	foreach $file (@files){
@@ -22,17 +27,10 @@ sub open_dir{
 			open_dir($file,$hash);
 		}else{
 	   		#print $file."\n";
-	   		if($file =~ /\.txt$/){
-	   			&abrir_archivo($file);
-			}
+	   		if($file =~ /\.c$/){
+	   			&abrir_archivo($file);	
+	   		}
 		}		
-	}
-	
-	print "Vocabulario\n\n";
-	print "Termino, Ni\n";
-	while (($key, $value) = each(%vocabulario)){
-     		
-     		print $key.", ".$value."\n";
 	}
 }
 
@@ -40,24 +38,70 @@ sub abrir_archivo{
 	my ($path) = ($_[0]);
 	open (MYFILE, $path);
 	@terminos;
+	$ultima_palabra;
+	$bandera = 0;
+	
 	while (<MYFILE>) {
-		chop();
-		$linea = $_;	
-		print $linea."\n";
-		#$linea =~ tr/A-Z/a-z/;	
-		#$linea =~ tr/·ÈÌÛ˙¸¡…Õ”⁄‹/aeiouuaeiouu/;
-		$linea =~ s/-\n//g;	
+		$linea = $_;
+		$linea =~ tr/A-Z/a-z/;	
+		$linea =~ tr/·ÈÌÛ˙¸¡…Õ”⁄‹/aeiouuaeiouu/;
+		$linea =~ s/[\.]/ /g;
+		$linea =~ s/[\;]/ /g;
+		$linea =~ s/[\,]/ /g;
+		$linea =~ s/[\(]/ /g;
+		$linea =~ s/[\)]/ /g;
+		$linea =~ s/[\[]/ /g;
+		$linea =~ s/[\]]/ /g;		
+		$linea =~ s/[\:]/ /g;
+		$linea =~ s/[\!]/ /g;
+		$linea =~ s/[\@]/ /g;
+		$linea =~ s/[\#]/ /g;
+		$linea =~ s/[\$]/ /g;
+		$linea =~ s/[\%]/ /g;
+		$linea =~ s/[\^]/ /g;
+		$linea =~ s/[\&]/ /g;
+		$linea =~ s/[\*]/ /g;
+		$linea =~ s/[\=]/ /g;
+		$linea =~ s/[\\]/ /g;
+		$linea =~ s/[\"]/ /g;
+		$linea =~ s/[\?]/ /g;
+		$linea =~ s/[\<]/ /g;
+		$linea =~ s/[\>]/ /g;
+		$linea =~ s/[\']/ /g;
+		$linea =~ s/[\`]/ /g;
 
 		@palabras = split (' ', $linea);
 		$largo = @palabras;
-
-		for ($i = 0; $i < $largo; $i++) {
-			#print $palabras[$i]."\n";
-			$temporal = $palabras[$i];
-			if (!($temporal =~ /^[0-9]+$/)){
-				$temporal =~ s/,//g;
-				push(@terminos, $temporal);
-				$terminos{$temporal}++;			
+				
+		if($bandera == 1){
+			$primera_palabra = $palabras[0];
+			$palabra_final = $ultima_palabra.$primera_palabra;
+			if(esta($palabra_final) == 1){
+				push(@terminos, $palabra_final);
+				$terminos{$palabra_final}++;
+			}
+			$bandera = 0;
+		}
+				
+		if($palabras[$largo-1] =~ m/[a-z0-9_]+-$/){			
+			$palabras[$largo-1] =~ s/-//;
+			$ultima_palabra = $palabras[$largo-1];		
+			$bandera = 1;	
+		}
+		
+		$linea =~ s/\-//g;
+		@palabras = split (' ', $linea);	
+		
+		if($bandera){
+			delete @palabras[$largo-1];			
+		}
+		
+		for $word (@palabras){
+			if (!($word =~ m/^[0-9]+/)){
+				if(esta($word) == 1){
+					push(@terminos, $word);
+					$terminos{$word}++;
+				}
 			}
 		}
 
@@ -65,28 +109,31 @@ sub abrir_archivo{
 	}
 	close (MYFILE);
 	
+	$largo = @terminos;
+	@sorted = sort {$b < $a} @terminos;
+	$primero = $sorted[0];
 	
-	
-	#$largo = @terminos;
-	#@sorted = sort {$b <=> $a} @terminos;
-	#$primero = $sorted[0];
-	#print "primero ".$primero."\n";
-	
-	#open (NUEVO, '>>/home/daniel/Escritorio/archivos/data.txt');
-	#print NUEVO $path.";".fileparse($path).";".$largo.";".$terminos{$primero}.";";
-	#	foreach $palabra (sort keys (%terminos)) {
-	#	   print NUEVO "(".$palabra.",".$terminos{$palabra}.");";
-	#	}
-	#print NUEVO "\n";
-	#close (NUEVO); 
+	open (NUEVO, '>>data.txt');
+	print NUEVO $path.";".fileparse($path).";".$largo.";".$terminos{$primero}.";";
+		foreach $palabra (sort keys (%terminos)) {
+		   print NUEVO "(".$palabra.",".$terminos{$palabra}.");";
+		}
+	print NUEVO "\n";
+	close (NUEVO); 
 }
 
-sub vocabulario{
-	
+sub esta{
+	my ($termino) = ($_[0]);
+	#my $termino = "a";	
+	for ($i = 0; $i < 37; $i++) {
+		$x = $stopwords[$i]."\n";
+		$num = ($x =~ /\b$termino\b/);
+		if ($num == 1) {
+			return 0;
+		}
+	}
+	return 1;
 }
 
-sub uniq {
-    return keys %{{ map { $_ => 1 } @_ }};
-}
 
-&open_dir("/home/daniel/Escritorio/archivos");
+crear_stops("/home/isaac/TEC/RIT/Proyecto 1/stop.txt");
