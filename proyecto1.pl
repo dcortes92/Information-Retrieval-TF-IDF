@@ -12,7 +12,7 @@ sub crear_stops{
 		#print $linea."\n";
 		push(@stopwords, $linea);
 	}
-	&open_dir("C:/Users/SirIsaac/Desktop/man.es");
+	&open_dir("D:/man.es");
 	#&esta("casa");
 }
 
@@ -146,4 +146,4 @@ sub esta{
 }
 
 
-&crear_stops("C:/Users/SirIsaac/Desktop/stop.txt");
+&crear_stops("D:/stop.txt");
