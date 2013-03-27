@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 COPYSIGN(3)      Manual del Programador de Linux      COPYSIGN(3)
 
 
@@ -20,3 +21,27 @@ CONFORME A
 
 
 GNU                     25 Diciembre 1995             COPYSIGN(3)
+=======
+COPYSIGN(3)      Manual del Programador de Linux      COPYSIGN(3)
+
+
+
+NOMBRE
+       copysign - copia el signo de un número
+
+SINOPSIS
+       #include <math.h>
+
+       double copysign(double x, double y);
+
+DESCRIPCIÓN
+       La  función  copysign() devuelve un valor cuyo valor abso­
+       luto coincide con x, pero cuyo signo coincide con el de y.
+
+CONFORME A
+       BSD 4.3
+
+
+
+GNU                     25 Diciembre 1995             COPYSIGN(3)
+>>>>>>> 2dddb66bfee4bdbf60d61b3fddad385142b3c7ba
