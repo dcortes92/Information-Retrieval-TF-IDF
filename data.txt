@@ -1,4 +1,0 @@
-/home/daniel/Escritorio/archivos/d1.txt;d1.txt;10;4;(be,2);(do,2);(is,2);(to,4);
-/home/daniel/Escritorio/archivos/d3.txt;d3.txt;20;4;(am,1);(be,4);(do,5);(i,2);(is,2);(therefore,1);(think,1);(to,4);
-/home/daniel/Escritorio/archivos/d4.txt;d4.txt;32;4;(am,1);(be,6);(da,3);(do,8);(i,2);(is,2);(it,2);(let,2);(therefore,1);(think,1);(to,4);
-/home/daniel/Escritorio/archivos/d2.txt;d2.txt;43;6;(am,3);(be,8);(da,3);(do,8);(i,4);(is,2);(it,2);(let,2);(not,1);(or,1);(therefore,1);(think,1);(to,6);(what,1);
