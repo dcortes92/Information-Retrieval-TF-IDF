@@ -11,7 +11,11 @@ sub crear_stops{
 		chomp($linea);
 		push(@stopwords, $linea);
 	}
+<<<<<<< HEAD
+	&open_dir("/home/daniel/man.es");
+=======
 	&open_dir("/home/isaac/man.es");
+>>>>>>> e780bd56f42063e168fd803d054ab76f048f9272
 	#&esta("casa");
 }
 
@@ -25,9 +29,19 @@ sub open_dir{
 		next unless( -f $file or -d $file ); #se rechazan pipes, links, etc ..
 	   	if( -d $file){
 			open_dir($file,$hash);
+<<<<<<< HEAD
 		}
 		else{
 	   		if($file =~ /\.c$/){
+=======
+		}else{
+	   		#print $file."\n";
+<<<<<<< HEAD
+	   		if($file =~ /\.c$/){
+=======
+	   		if($file =~ /\.txt$/){
+>>>>>>> e780bd56f42063e168fd803d054ab76f048f9272
+>>>>>>> 1792eacba2e1660ea46671bc4411875a51091258
 	   			&abrir_archivo($file);	   				
 	   		}
 		}		
@@ -109,9 +123,20 @@ sub abrir_archivo{
 	$largo = (keys %terminos)-1;
 	@sorted = sort { $terminos{$a} < $terminos{$b} } keys %terminos;
 	$primero = $sorted[0];
+<<<<<<< HEAD
 	
 	print "voy a crear archivo ".$largo."\n";
 	open (NUEVO, ">>data.txt");
+=======
+<<<<<<< HEAD
+	
+	open (NUEVO, '>>/home/daniel/data.txt');
+=======
+	@sorted = undef;
+	
+	open (NUEVO, "/home/isaac>data.txt");
+>>>>>>> e780bd56f42063e168fd803d054ab76f048f9272
+>>>>>>> 1792eacba2e1660ea46671bc4411875a51091258
 	print NUEVO $path.";".fileparse($path).";".$largo.";".$terminos{$primero}.";";
 		foreach $palabra (sort keys (%terminos)) {
 			if($palabra cmp "")
@@ -141,4 +166,8 @@ sub esta{
 }
 
 
+<<<<<<< HEAD
+crear_stops("/home/daniel/stop.txt");
+=======
 &crear_stops("/home/isaac/stop.txt");
+>>>>>>> e780bd56f42063e168fd803d054ab76f048f9272
