@@ -9,9 +9,14 @@ sub crear_stops{
 	while (<MYFILE>){
 		$linea = $_;
 		chomp($linea);
+		print $linea."\n";
 		push(@stopwords, $linea);
 	}
+<<<<<<< HEAD
 	&open_dir("/home/daniel/man.es");
+=======
+	&open_dir("/home/isaac/man.es");
+>>>>>>> e780bd56f42063e168fd803d054ab76f048f9272
 	#&esta("casa");
 }
 
@@ -27,7 +32,11 @@ sub open_dir{
 			open_dir($file,$hash);
 		}else{
 	   		#print $file."\n";
+<<<<<<< HEAD
 	   		if($file =~ /\.c$/){
+=======
+	   		if($file =~ /\.txt$/){
+>>>>>>> e780bd56f42063e168fd803d054ab76f048f9272
 	   			&abrir_archivo($file);	   				
 	   		}
 		}		
@@ -37,8 +46,8 @@ sub open_dir{
 sub abrir_archivo{
 	my ($path) = ($_[0]);
 	open (MYFILE, $path);
-	@terminos;
-	$ultima_palabra;
+	%terminos =  undef;
+	$ultima_palabra = undef;
 	$bandera = 0;
 	
 	while (<MYFILE>) {
@@ -69,31 +78,32 @@ sub abrir_archivo{
 		$linea =~ s/[\>]/ /g;
 		$linea =~ s/[\']/ /g;
 		$linea =~ s/[\`]/ /g;
-
+		$linea =~ s/[\|]/ /g;
+		$linea =~ s/[\/]/ /g;
+		$linea =~ s/[\+]/ /g;
+		
+		$linea =~ s/-//g;
+		
+		@palabras = undef;
+		$largo = 0;
 		@palabras = split (' ', $linea);
 		$largo = @palabras;
-				
-		if($bandera == 1){
+		
+		if($bandera == 1){			
 			$primera_palabra = $palabras[0];
 			$palabra_final = $ultima_palabra.$primera_palabra;
 			if(esta($palabra_final) == 1){
-				push(@terminos, $palabra_final);
-				$terminos{$palabra_final}++;
+				$terminos{$palabra_final};
 			}
 			$bandera = 0;
+			delete @palabras[0];
 		}
 				
-		if($palabras[$largo-1] =~ m/[a-z0-9_]+-$/){			
-			$palabras[$largo-1] =~ s/-//;
+		if($palabras[$largo-1] =~ m/[a-z0-9_]+­$/){	
+			$palabras[$largo-1] =~ s/­//;
 			$ultima_palabra = $palabras[$largo-1];		
-			$bandera = 1;	
-		}
-		
-		$linea =~ s/\-//g;
-		@palabras = split (' ', $linea);	
-		
-		if($bandera){
-			delete @palabras[$largo-1];			
+			$bandera = 1;
+			delete @palabras[$largo-1];	
 		}
 		
 		for $word (@palabras){
@@ -104,30 +114,43 @@ sub abrir_archivo{
 				}
 			}
 		}
-
-
+		
+		$largo = 0;
+		@palabras = undef;
 	}
 	close (MYFILE);
 	
-	$largo = @terminos;
-	@sorted = sort {$b < $a} @terminos;
+	$largo = scalar(keys %terminos)-1;
+	@sorted = undef;
+	@sorted = sort { $terminos{$a} < $terminos{$b} } keys %terminos;
 	$primero = $sorted[0];
+<<<<<<< HEAD
 	
 	open (NUEVO, '>>/home/daniel/data.txt');
+=======
+	@sorted = undef;
+	
+	open (NUEVO, "/home/isaac>data.txt");
+>>>>>>> e780bd56f42063e168fd803d054ab76f048f9272
 	print NUEVO $path.";".fileparse($path).";".$largo.";".$terminos{$primero}.";";
 		foreach $palabra (sort keys (%terminos)) {
-		   print NUEVO "(".$palabra.",".$terminos{$palabra}.");";
+			if($palabra cmp "")
+			{
+				print NUEVO "(".$palabra.",".$terminos{$palabra}.");";
+			}
 		}
 	print NUEVO "\n";
+	$largo = 0;
+	%terminos = undef;
+	
 	close (NUEVO); 
 }
 
 sub esta{
 	my ($termino) = ($_[0]);
-	#my $termino = "a";	
 	for ($i = 0; $i < 37; $i++) {
-		$x = $stopwords[$i]."\n";
-		$num = ($x =~ /\b$termino\b/);
+		$elem = $stopwords[$i]."\n";
+		$num = ($elem =~ m/\b$termino$/);
 		if ($num == 1) {
 			return 0;
 		}
@@ -136,4 +159,8 @@ sub esta{
 }
 
 
+<<<<<<< HEAD
 crear_stops("/home/daniel/stop.txt");
+=======
+&crear_stops("/home/isaac/stop.txt");
+>>>>>>> e780bd56f42063e168fd803d054ab76f048f9272
