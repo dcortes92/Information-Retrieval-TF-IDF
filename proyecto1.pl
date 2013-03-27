@@ -9,7 +9,6 @@ sub crear_stops{
 	while (<MYFILE>){
 		$linea = $_;
 		chomp($linea);
-		print $linea."\n";
 		push(@stopwords, $linea);
 	}
 	&open_dir("/home/isaac/man.es");
@@ -26,9 +25,9 @@ sub open_dir{
 		next unless( -f $file or -d $file ); #se rechazan pipes, links, etc ..
 	   	if( -d $file){
 			open_dir($file,$hash);
-		}else{
-	   		#print $file."\n";
-	   		if($file =~ /\.txt$/){
+		}
+		else{
+	   		if($file =~ /\.c$/){
 	   			&abrir_archivo($file);	   				
 	   		}
 		}		
@@ -38,8 +37,9 @@ sub open_dir{
 sub abrir_archivo{
 	my ($path) = ($_[0]);
 	open (MYFILE, $path);
-	%terminos =  undef;
-	$ultima_palabra = undef;
+	%terminos = undef
+	;
+	$ultima_palabra;
 	$bandera = 0;
 	
 	while (<MYFILE>) {
@@ -72,20 +72,18 @@ sub abrir_archivo{
 		$linea =~ s/[\`]/ /g;
 		$linea =~ s/[\|]/ /g;
 		$linea =~ s/[\/]/ /g;
-		$linea =~ s/[\+]/ /g;
+		$linea =~ s/[\+]/ /g;		
+		$linea =~ s/-/ /g;
 		
-		$linea =~ s/-//g;
-		
-		@palabras = undef;
 		$largo = 0;
 		@palabras = split (' ', $linea);
 		$largo = @palabras;
-		
+			
 		if($bandera == 1){			
 			$primera_palabra = $palabras[0];
 			$palabra_final = $ultima_palabra.$primera_palabra;
 			if(esta($palabra_final) == 1){
-				$terminos{$palabra_final};
+				$terminos{$palabra_final}++;
 			}
 			$bandera = 0;
 			delete @palabras[0];
@@ -101,24 +99,19 @@ sub abrir_archivo{
 		for $word (@palabras){
 			if (!($word =~ m/^[0-9]+/)){
 				if(esta($word) == 1){
-					push(@terminos, $word);
 					$terminos{$word}++;
 				}
 			}
 		}
-		
-		$largo = 0;
-		@palabras = undef;
 	}
 	close (MYFILE);
 	
-	$largo = scalar(keys %terminos)-1;
-	@sorted = undef;
+	$largo = (keys %terminos)-1;
 	@sorted = sort { $terminos{$a} < $terminos{$b} } keys %terminos;
 	$primero = $sorted[0];
-	@sorted = undef;
 	
-	open (NUEVO, "/home/isaac>data.txt");
+	print "voy a crear archivo ".$largo."\n";
+	open (NUEVO, ">>data.txt");
 	print NUEVO $path.";".fileparse($path).";".$largo.";".$terminos{$primero}.";";
 		foreach $palabra (sort keys (%terminos)) {
 			if($palabra cmp "")
@@ -127,17 +120,19 @@ sub abrir_archivo{
 			}
 		}
 	print NUEVO "\n";
-	$largo = 0;
-	%terminos = undef;
-	
 	close (NUEVO); 
+	%terminos = undef;
 }
 
 sub esta{
 	my ($termino) = ($_[0]);
+	if($terminos cmp "")
+	{
+		return 0;
+	}
 	for ($i = 0; $i < 37; $i++) {
 		$elem = $stopwords[$i]."\n";
-		$num = ($elem =~ m/\b$termino$/);
+		$num = ($elem =~ /\b$termino$/);
 		if ($num == 1) {
 			return 0;
 		}
