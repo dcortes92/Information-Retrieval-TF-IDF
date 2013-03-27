@@ -11,7 +11,7 @@ sub crear_stops{
 		chomp($linea);
 		push(@stopwords, $linea);
 	}
-	&open_dir("/home/man.es");
+	&open_dir("/home/daniel/man.es");
 	#&esta("casa");
 }
 
@@ -27,8 +27,8 @@ sub open_dir{
 			open_dir($file,$hash);
 		}else{
 	   		#print $file."\n";
-	   		if($file =~ /\.txt$/){
-	   			&abrir_archivo($file);	
+	   		if($file =~ /\.c$/){
+	   			&abrir_archivo($file);	   				
 	   		}
 		}		
 	}
@@ -112,9 +112,8 @@ sub abrir_archivo{
 	$largo = @terminos;
 	@sorted = sort {$b < $a} @terminos;
 	$primero = $sorted[0];
-	$ruta = "/home/data.txt";
 	
-	open (NUEVO, '>>data.txt');
+	open (NUEVO, '>>/home/daniel/data.txt');
 	print NUEVO $path.";".fileparse($path).";".$largo.";".$terminos{$primero}.";";
 		foreach $palabra (sort keys (%terminos)) {
 		   print NUEVO "(".$palabra.",".$terminos{$palabra}.");";
@@ -137,4 +136,4 @@ sub esta{
 }
 
 
-crear_stops("/home/stop.txt");
+crear_stops("/home/daniel/stop.txt");
