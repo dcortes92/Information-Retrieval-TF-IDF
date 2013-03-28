@@ -1,18 +1,42 @@
+# I Tarea programada
+# Recuperación de Información Textual
+# Daniel Cortés Sáenz
+# Isaac Ramírez Solano
+# I Semestre, 2013
+
+#Necesario para el manejo de archivos
 use File::Basename;
 
+#Arreglo para los stopwords
 @stopwords;
+#Hash para los términos de un documento, usado para el archivo de frecuencias
+%terminos;
+#Numero de documentos
+$N;
+#Bandera para saber cuando se termina de leer un archivo
+$bandera_archivo;
+#Hash para el vocabulario de la colección
+%vocabulario;
+#Arreglo para el vocabulario de cada archivo.
+@vocabulario_archivo;
 
+#Almacena en el arreglo @stopwords las palabras leídas del archivo de texto de stopwords.
 sub crear_stops{
+	#Ruta del archivo de texto de stopwords.
 	my ($path) = ($_[0]);
+	#Se abre el archivo y se usa el file handler MYFILE
 	open(MYFILE, $path);
-	
+	#Mientras que MYFILE sea distinto de 0
 	while (<MYFILE>){
+		#Se lee la línea.
 		$linea = $_;
+		#Quita \n de línea.
 		chomp($linea);
-		#print $linea."\n";
+		#Se inserta la palabra en el arreglo.		
 		push(@stopwords, $linea);
 	}
-	#&open_dir("C:/Users/SirIsaac/Desktop/man.es");
+	#&open_dir("C:/Users/SirIsaac/Desktop/man.es");	
+	print("Creando archivo data...\n");
 	&open_dir("D:/man.es");
 }
 
@@ -29,7 +53,11 @@ sub open_dir{
 		}else{
 	   		#print $file."\n";
 	   		if($file =~ /\.txt$/){
-	   			&abrir_archivo($file);	   				
+				$N++;
+	   			&abrir_archivo($file);
+				&actualizar_vocabulario(@vocabulario_archivo);
+				&escribir_archivo_vocabulario;
+				@vocabulario_archivo = undef;
 	   		}
 		}		
 	}
@@ -81,6 +109,7 @@ sub abrir_archivo{
 		@palabras = split (' ', $linea);
 		$largo = @palabras;
 		
+		#Para unir las palabras con - al final
 		if($bandera == 1){			
 			$primera_palabra = $palabras[0];
 			$palabra_final = $ultima_palabra.$primera_palabra;
@@ -102,11 +131,10 @@ sub abrir_archivo{
 			if (!($word =~ m/^[0-9]+/)){
 				if(esta($word) == 1){
 					push(@terminos, $word);
-					$terminos{$word}++;
+					$terminos{$word}++;					
 				}
 			}
-		}
-		
+		}		
 		$largo = 0;
 		@palabras = undef;
 	}
@@ -128,6 +156,19 @@ sub abrir_archivo{
 		}
 	print NUEVO "\n";
 	$largo = 0;
+	
+	for $word(@terminos)
+	{
+		if(palabra_repetida($word) == 1)
+		{
+			continue;
+		}
+		else
+		{
+			push(@vocabulario_archivo, $word);
+		}
+	}
+	
 	%terminos = undef;
 	
 	close (NUEVO); 
@@ -145,6 +186,41 @@ sub esta{
 	return 1;
 }
 
+sub palabra_repetida{
+	my ($termino) = ($_[0]);
+	for ($i = 0; $i < $vocabulario_archivo; $i++) {
+		$pal = $vocabulario[$i];
+		if($pal eq $termino)
+		{
+			return 1;
+		}		
+	}
+	return 0;
+}
+
+#Para el par de (termino, ni)
+sub actualizar_vocabulario
+{
+	my @arreglo_vocabulario_archivo = @_;
+	for $palabra(@arreglo_vocabulario_archivo)
+	{
+		@vocabulario{$palabra}++;
+	}
+}
+
+sub escribir_archivo_vocabulario
+{
+	open (NUEVO, '>>vocabulario.txt');
+		foreach $palabra (sort keys (%terminos)) {
+			if($palabra cmp "")
+			{
+				print NUEVO "(".$palabra.",".$vocabulario{$palabra}.");";
+			}
+		}
+	print NUEVO "\n";
+	close(NUEVO);
+}
+
 
 #&crear_stops("C:/Users/SirIsaac/Desktop/stop.txt");
-&open_dir("D:/stop.txt");
+&crear_stops("D:\stop.txt");
