@@ -162,11 +162,7 @@ sub abrir_archivo{
 	
 	foreach $word(%terminos)
 	{
-		if(palabra_repetida($word) == 1)
-		{
-			continue;
-		}
-		else
+		if(palabra_repetida($word) != 1)
 		{
 			push(@vocabulario_archivo, $word);
 		}
@@ -193,9 +189,8 @@ sub esta{
 
 sub palabra_repetida{
 	my ($termino) = ($_[0]);
-	for ($i = 0; $i < $vocabulario_archivo; $i++) {
-		$pal = $vocabulario_archivo[$i];
-		if($pal eq $termino)
+	for $palabra(@vocabulario_archivo) {		
+		if($palabra eq $termino)
 		{
 			return 1;
 		}		
@@ -206,10 +201,9 @@ sub palabra_repetida{
 #Para el par de (termino, ni)
 sub actualizar_vocabulario
 {
-	for ($i = 0; $i < $vocabulario_archivo; $i++)
+	foreach $palabra(@vocabulario_archivo)
 	{
-		$pal = $vocabulario_archivo[$i];
-		$vocabulario{$pal}++;
+		$vocabulario{$palabra}++;
 	}
 }
 
