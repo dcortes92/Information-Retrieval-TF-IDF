@@ -79,7 +79,9 @@ sub abrir_archivo{
 		$linea =~ s/[\(]/ /g;
 		$linea =~ s/[\)]/ /g;
 		$linea =~ s/[\[]/ /g;
-		$linea =~ s/[\]]/ /g;		
+		$linea =~ s/[\]]/ /g;
+		$linea =~ s/[\{]/ /g;
+		$linea =~ s/[\}]/ /g;
 		$linea =~ s/[\:]/ /g;
 		$linea =~ s/[\!]/ /g;
 		$linea =~ s/[\@]/ /g;
@@ -92,6 +94,7 @@ sub abrir_archivo{
 		$linea =~ s/[\=]/ /g;
 		$linea =~ s/[\\]/ /g;
 		$linea =~ s/[\"]/ /g;
+		$linea =~ s/[\¿]/ /g;
 		$linea =~ s/[\?]/ /g;
 		$linea =~ s/[\<]/ /g;
 		$linea =~ s/[\>]/ /g;
@@ -100,6 +103,7 @@ sub abrir_archivo{
 		$linea =~ s/[\|]/ /g;
 		$linea =~ s/[\/]/ /g;
 		$linea =~ s/[\+]/ /g;
+		$linea =~ s/[\~]/ /g;
 		
 		$linea =~ s/-//g;
 		
