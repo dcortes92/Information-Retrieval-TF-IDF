@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 STRFRY(3)        Manual del Programador de Linux        STRFRY(3)
 
 
@@ -32,3 +33,39 @@ VÉASE TAMBIÉN
 
 
 GNU                       11 Marzo 1998                 STRFRY(3)
+=======
+STRFRY(3)        Manual del Programador de Linux        STRFRY(3)
+
+
+
+NOMBRE
+       strfry  -  mezcla  aleatoriamente  los  caracteres  de una
+       cadena
+
+SINOPSIS
+       #include <string.h>
+
+       char *strfry(char *string);
+
+DESCRIPCIÓN
+       La función strfry() mezcla aleatoriamente  los  caracteres
+       de  una  cadena  cuya  dirección  se  pasa a la función en
+       string mediante llamadas a rand(3) para  intercambiar  los
+       caracteres  aleatoriamente. El resultado es un anagrama de
+       string.
+
+VALOR DEVUELTO
+       La función strfry() devuelve un puntero a la cadena cambi­
+       ada aleatoriamente.
+
+CONFORME A
+       La función strfry() es única a la biblioteca de C de Linux
+       y de GNU.
+
+VÉASE TAMBIÉN
+       memfrob(3)
+
+
+
+GNU                       11 Marzo 1998                 STRFRY(3)
+>>>>>>> 2dddb66bfee4bdbf60d61b3fddad385142b3c7ba

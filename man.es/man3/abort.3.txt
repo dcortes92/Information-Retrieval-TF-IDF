@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ABORT(3)         Manual del Programador de Linux         ABORT(3)
 
 
@@ -32,3 +33,39 @@ VÉASE  TAMBIÉN
 
 
 GNU                       12 Abril 1993                  ABORT(3)
+=======
+ABORT(3)         Manual del Programador de Linux         ABORT(3)
+
+
+
+NOMBRE
+       abort - causa una terminación anormal del programa
+
+SINOPSIS
+       #include <stdlib.h>
+
+       void abort(void);
+
+DESCRIPCIÓN
+       La  función  abort() causa una terminación anormal a menos
+       que se capture la señal SIGABORT y el manejador de señales
+       no regrese.  Si la función abort() causa la terminación de
+       un programa, todos los canales abiertos se cierran y  bor­
+       ran.
+
+       Si  se  bloquea  o  ignora  la  señal SIGABORT, la función
+       abort() todavía predominará.
+
+VALOR DEVUELTO
+       La función abort() nunca regresa.
+
+CONFORME A
+       SVID 3, POSIX, BSD 4.3, ISO 9899
+
+VÉASE  TAMBIÉN
+       sigaction(2), exit(3)
+
+
+
+GNU                       12 Abril 1993                  ABORT(3)
+>>>>>>> 2dddb66bfee4bdbf60d61b3fddad385142b3c7ba

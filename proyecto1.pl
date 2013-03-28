@@ -12,8 +12,7 @@ sub crear_stops{
 		#print $linea."\n";
 		push(@stopwords, $linea);
 	}
-	&open_dir("D:/man.es");
-	#&esta("casa");
+	&open_dir("C:/Users/SirIsaac/Desktop/man.es");
 }
 
 sub open_dir{
@@ -137,7 +136,7 @@ sub esta{
 	my ($termino) = ($_[0]);
 	for ($i = 0; $i < 37; $i++) {
 		$elem = $stopwords[$i]."\n";
-		$num = ($elem =~ m/\b$termino$/);
+		$num = ($elem =~ /^$termino$/);
 		if ($num == 1) {
 			return 0;
 		}
@@ -146,4 +145,4 @@ sub esta{
 }
 
 
-&crear_stops("D:/stop.txt");
+&crear_stops("C:/Users/SirIsaac/Desktop/stop.txt");
