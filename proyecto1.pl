@@ -16,7 +16,7 @@ $N;
 #Bandera para saber cuando se termina de leer un archivo
 $bandera_archivo;
 #Hash para el vocabulario de la colección
-%vocabulario;
+%vocabulario = undef;
 #Arreglo para el vocabulario de cada archivo.
 @vocabulario_archivo;
 
@@ -84,6 +84,7 @@ sub abrir_archivo{
 		$linea =~ s/[\{]/ /g;
 		$linea =~ s/[\}]/ /g;
 		$linea =~ s/[\:]/ /g;
+		$linea =~ s/[\¡]/ /g;
 		$linea =~ s/[\!]/ /g;
 		$linea =~ s/[\@]/ /g;
 		$linea =~ s/[\#]/ /g;
@@ -118,7 +119,7 @@ sub abrir_archivo{
 			$primera_palabra = $palabras[0];
 			$palabra_final = $ultima_palabra.$primera_palabra;
 			if(esta($palabra_final) == 1){
-				$terminos{$palabra_final};
+				$terminos{$palabra_final}++;
 			}
 			$bandera = 0;
 			delete @palabras[0];
@@ -132,7 +133,7 @@ sub abrir_archivo{
 		}
 		
 		for $word (@palabras){
-			if (!($word =~ m/^[0-9]+/)){
+			if (($word =~ m/[a-z0-9_]+/)&!($word =~ m/^[0-9]+/)){
 				if(esta($word) == 1){
 					$terminos{$word}++;					
 				}
@@ -159,16 +160,15 @@ sub abrir_archivo{
 		}
 	print NUEVO "\n";
 	$largo = 0;
-	
-	foreach $word(%terminos)
-	{
-		if(palabra_repetida($word) != 1)
-		{
-			push(@vocabulario_archivo, $word);
-		}
-	}	
-	
 	close (NUEVO);
+	
+	foreach $word(sort keys (%terminos))
+	{
+		if($word cmp "")
+		{	
+			push(@vocabulario_archivo, $word);
+		}		
+	}	
 	
 	&actualizar_vocabulario;
 	%terminos = undef;
@@ -189,7 +189,7 @@ sub esta{
 
 sub palabra_repetida{
 	my ($termino) = ($_[0]);
-	for $palabra(@vocabulario_archivo) {		
+	for $palabra(@vocabulario_archivo) {
 		if($palabra eq $termino)
 		{
 			return 1;
@@ -201,21 +201,24 @@ sub palabra_repetida{
 #Para el par de (termino, ni)
 sub actualizar_vocabulario
 {
-	foreach $palabra(@vocabulario_archivo)
+	for $palabra(@vocabulario_archivo)
 	{
-		$vocabulario{$palabra}++;
+		if($palabra cmp "")
+		{
+			$vocabulario{$palabra}++;
+		}		
 	}
 }
 
 sub escribir_archivo_vocabulario
 {
 	open (NUEVO, '>>vocabulario.txt');
-		foreach $pal(%vocabulario) {
-			if($pal cmp "")
-			{
-				print NUEVO "(".$pal.",".$vocabulario{$pal}.");\n";
-			}
+	foreach $pal(sort keys (%vocabulario)) {
+		if($pal cmp "")
+		{
+			print NUEVO "(".$pal.",".$vocabulario{$pal}.")\n";
 		}
+	}
 	close(NUEVO);
 }
 
