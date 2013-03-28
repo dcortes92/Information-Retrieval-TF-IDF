@@ -36,10 +36,11 @@ sub crear_stops{
 		push(@stopwords, $linea);
 	}
 	#&open_dir("C:/Users/SirIsaac/Desktop/man.es");	
-	print("Creando archivo data...\n");
+	print "Creando archivo data...\n" ;
 	&open_dir("D:/man.es");
-	print("Creando archivo vocabulario...\n");	
+	print "Creando archivo vocabulario...\n";	
 	&escribir_archivo_vocabulario;
+	print "N es ".$N."\n";
 }
 
 sub open_dir{
@@ -129,7 +130,6 @@ sub abrir_archivo{
 		for $word (@palabras){
 			if (!($word =~ m/^[0-9]+/)){
 				if(esta($word) == 1){
-					push(@terminos, $word);
 					$terminos{$word}++;					
 				}
 			}
@@ -156,7 +156,7 @@ sub abrir_archivo{
 	print NUEVO "\n";
 	$largo = 0;
 	
-	for $word(@terminos)
+	foreach $word(%terminos)
 	{
 		if(palabra_repetida($word) == 1)
 		{
@@ -168,11 +168,11 @@ sub abrir_archivo{
 		}
 	}	
 	
+	close (NUEVO);
+	
 	&actualizar_vocabulario;
 	%terminos = undef;
-	@vocabulario_archivo = undef;
-	
-	close (NUEVO); 
+	@vocabulario_archivo = undef; 
 }
 
 sub esta{
@@ -190,7 +190,7 @@ sub esta{
 sub palabra_repetida{
 	my ($termino) = ($_[0]);
 	for ($i = 0; $i < $vocabulario_archivo; $i++) {
-		$pal = $vocabulario[$i];
+		$pal = $vocabulario_archivo[$i];
 		if($pal eq $termino)
 		{
 			return 1;
@@ -202,9 +202,10 @@ sub palabra_repetida{
 #Para el par de (termino, ni)
 sub actualizar_vocabulario
 {
-	for $palabra(@vocabulario_archivo)
+	for ($i = 0; $i < $vocabulario_archivo; $i++)
 	{
-		$vocabulario{$palabra}++;
+		$pal = $vocabulario_archivo[$i];
+		$vocabulario{$pal}++;
 	}
 }
 
