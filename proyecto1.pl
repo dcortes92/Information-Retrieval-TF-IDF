@@ -38,6 +38,8 @@ sub crear_stops{
 	#&open_dir("C:/Users/SirIsaac/Desktop/man.es");	
 	print("Creando archivo data...\n");
 	&open_dir("D:/man.es");
+	print("Creando archivo vocabulario...\n");	
+	&escribir_archivo_vocabulario;
 }
 
 sub open_dir{
@@ -55,9 +57,6 @@ sub open_dir{
 	   		if($file =~ /\.txt$/){
 				$N++;
 	   			&abrir_archivo($file);
-				&actualizar_vocabulario(@vocabulario_archivo);
-				&escribir_archivo_vocabulario;
-				@vocabulario_archivo = undef;
 	   		}
 		}		
 	}
@@ -167,9 +166,11 @@ sub abrir_archivo{
 		{
 			push(@vocabulario_archivo, $word);
 		}
-	}
+	}	
 	
+	&actualizar_vocabulario;
 	%terminos = undef;
+	@vocabulario_archivo = undef;
 	
 	close (NUEVO); 
 }
@@ -201,23 +202,21 @@ sub palabra_repetida{
 #Para el par de (termino, ni)
 sub actualizar_vocabulario
 {
-	my @arreglo_vocabulario_archivo = @_;
-	for $palabra(@arreglo_vocabulario_archivo)
+	for $palabra(@vocabulario_archivo)
 	{
-		@vocabulario{$palabra}++;
+		$vocabulario{$palabra}++;
 	}
 }
 
 sub escribir_archivo_vocabulario
 {
 	open (NUEVO, '>>vocabulario.txt');
-		foreach $palabra (sort keys (%terminos)) {
-			if($palabra cmp "")
+		foreach $pal(%vocabulario) {
+			if($pal cmp "")
 			{
-				print NUEVO "(".$palabra.",".$vocabulario{$palabra}.");";
+				print NUEVO "(".$pal.",".$vocabulario{$pal}.");\n";
 			}
 		}
-	print NUEVO "\n";
 	close(NUEVO);
 }
 
