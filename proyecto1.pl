@@ -334,7 +334,7 @@ elsif($comando eq "buscar")
 	
 	if($modalidad eq "" or $numinicio eq "" or $numfin eq "" or $prefijo eq "" or $prefijoconsulta eq "" or $escalafon eq "" or $archivoHTML eq "" or $consulta eq "")
 	{
-		print "Error, faltan parametros para generar\n";
+		print "Error, faltan parametros para buscar\n";
 	}
 	else
 	{
