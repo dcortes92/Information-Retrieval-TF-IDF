@@ -16,6 +16,5 @@ nytprof.out
 pm_to_blib
 *~
 ~*
-data.txt
-vocabulario.txt
+*.txt
 

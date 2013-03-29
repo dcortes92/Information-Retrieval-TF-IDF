@@ -19,6 +19,12 @@ $bandera_archivo;
 %vocabulario = undef;
 #Arreglo para el vocabulario de cada archivo.
 @vocabulario_archivo;
+#----------------------Variables de la línea de comandos-----------------------
+$comando;
+$archivo_stopwords;
+$directorio;
+$patron;
+$prefijo;
 
 #Almacena en el arreglo @stopwords las palabras leídas del archivo de texto de stopwords.
 sub crear_stops{
@@ -63,9 +69,11 @@ sub open_dir{
 	}
 }
 
+#Abrir cada archivo de la colección
 sub abrir_archivo{
 	my ($path) = ($_[0]);
 	open (MYFILE, $path);
+	#hash que tiene los términos de cada archivo
 	%terminos =  undef;
 	$ultima_palabra = undef;
 	$bandera = 0;
@@ -114,7 +122,7 @@ sub abrir_archivo{
 		@palabras = split (' ', $linea);
 		$largo = @palabras;
 		
-		#Para unir las palabras con - al final
+		#Para unir las palabras con - al final (Isaac comentar mejor)
 		if($bandera == 1){			
 			$primera_palabra = $palabras[0];
 			$palabra_final = $ultima_palabra.$primera_palabra;
@@ -125,6 +133,7 @@ sub abrir_archivo{
 			delete @palabras[0];
 		}
 				
+		#Para unir las palabras con -a al final (Isaac comentar mejor)
 		if($palabras[$largo-1] =~ m/[a-z0-9_]+­$/){	
 			$palabras[$largo-1] =~ s/­//;
 			$ultima_palabra = $palabras[$largo-1];		
@@ -162,6 +171,7 @@ sub abrir_archivo{
 	$largo = 0;
 	close (NUEVO);
 	
+	#Se almacena el vocabulario de cada archivo para el hash de vocabulario de la colección
 	foreach $word(sort keys (%terminos))
 	{
 		if($word cmp "")
@@ -170,6 +180,7 @@ sub abrir_archivo{
 		}		
 	}	
 	
+	#Se actualiza el hash de vocabulario
 	&actualizar_vocabulario;
 	%terminos = undef;
 	@vocabulario_archivo = undef; 
@@ -187,18 +198,8 @@ sub esta{
 	return 1;
 }
 
-sub palabra_repetida{
-	my ($termino) = ($_[0]);
-	for $palabra(@vocabulario_archivo) {
-		if($palabra eq $termino)
-		{
-			return 1;
-		}		
-	}
-	return 0;
-}
 
-#Para el par de (termino, ni)
+#Para el par de (termino, ni) -> vocabulario de la colección
 sub actualizar_vocabulario
 {
 	for $palabra(@vocabulario_archivo)
@@ -210,6 +211,7 @@ sub actualizar_vocabulario
 	}
 }
 
+#Escribe el archivo con el vocabulario de la colección y el ni
 sub escribir_archivo_vocabulario
 {
 	open (NUEVO, '>>vocabulario.txt');
@@ -222,6 +224,31 @@ sub escribir_archivo_vocabulario
 	close(NUEVO);
 }
 
-
+#--------------------------MAIN------------------------#
 #&crear_stops("C:/Users/SirIsaac/Desktop/stop.txt");
-&crear_stops("D:\stop.txt");
+#&crear_stops("D:\stop.txt");
+$comando = shift;
+if($comando eq "generar")
+{
+	$archivo_stopwords = shift;
+	$directorio = shift;
+	$patron = shift;
+	$prefijo = shift;
+	
+	if($archivo_stopwords eq "" or $directorio eq "" or $patron eq "" or $prefijo eq "")
+	{
+		print "Error, faltan parametros para generar\n";
+	}
+	else
+	{
+		&crear_stops(""
+	}
+}
+elsif($comando eq "buscar")
+{
+	print "Buscar...\n";
+}
+else
+{
+	print "Error, comando no reconocido\n";
+}
