@@ -46,10 +46,9 @@ sub calcular_frecuencias
 	$bandera_accion = 1;
 	&crear_stops;
 	print "Creando archivo frecuencias...\n" ;
-	&open_dir;
+	&open_dir("D:/man.es");
 	print "Creando archivo vocabulario...\n";	
 	&escribir_archivo_vocabulario;
-	print "N es ".$N."\n";
 }
 
 #Calcular pesos
@@ -57,7 +56,7 @@ sub calcular_pesos
 {
 	$bandera_accion = 0;
 	print "Creando archivo pesos...\n" ;
-	&open_dir;
+	&open_dir("D:/man.es");
 }
 
 #Almacena en el arreglo @stopwords las palabras leídas del archivo de texto de stopwords.
@@ -77,18 +76,21 @@ sub crear_stops{
 }
 
 sub open_dir{
-	opendir(DIR, $directorio) or die("Error, No se pudo abrir el directorio\n");
+	my ($path) = ($_[0]);
+	opendir(DIR, $path) or die("Error, No se pudo abrir el directorio\n");
 	my @files = grep(!/^\./,readdir(DIR));
 	closedir(DIR);
 	foreach $file (@files){
-		$file = $directorio.'/'.$file; #path absoluto del fichero o directorio
+		$file = $path.'/'.$file; #path absoluto del fichero o directorio
 		next unless( -f $file or -d $file ); #se rechazan pipes, links, etc ..
 	   	if( -d $file){
 			open_dir($file,$hash);
 		}else{
-	   		if($file =~ /$patron/){
+	   		if($file =~ /\.txt$/){
 				#Se incrementa la variable N (Número de documentos)
-				$N++;
+				if($bandera_accion == 1){
+					$N++;
+				}				
 	   			&abrir_archivo($file);
 	   		}
 		}		
@@ -215,14 +217,13 @@ sub abrir_archivo{
 	else #Pesos
 	{
 		$norma = 0;
-		foreach $pal(sort keys(%vocabulario))
+		foreach $pal(sort keys(%terminos))
 		{
 			if($pal cmp "")
 			{
 				$ni = $vocabulario{$pal};
 				$fij = $terminos{$pal};
 				if($fij > 0){
-					print "Peso para ".$pal." = "."(log(".$fij.")/log(2)+1)*(log(".$N."/".$ni.")/log(2))\n";
 					$pesos{$pal} = ((log($fij)/log(2))+1)*(log($N/$ni)/log(2));
 				}
 				else
@@ -234,7 +235,7 @@ sub abrir_archivo{
 		}
 		$norma = sqrt($norma);
 		open (NUEVO, '>>'.$prefijo.'_PE.txt');
-		print NUEVO $path.";".fileparse($path).";".$largo.";".$norma;
+		print NUEVO $path.";".$largo.";".$norma;
 		foreach $palabra (sort keys (%pesos)) {
 			if($palabra cmp "")
 			{
