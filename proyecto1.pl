@@ -29,9 +29,8 @@ $prefijo;
 #Almacena en el arreglo @stopwords las palabras leídas del archivo de texto de stopwords.
 sub crear_stops{
 	#Ruta del archivo de texto de stopwords.
-	my ($path) = ($_[0]);
 	#Se abre el archivo y se usa el file handler MYFILE
-	open(MYFILE, $path);
+	open(MYFILE, $archivo_stopwords);
 	#Mientras que MYFILE sea distinto de 0
 	while (<MYFILE>){
 		#Se lee la línea.
@@ -42,8 +41,8 @@ sub crear_stops{
 		push(@stopwords, $linea);
 	}
 	#&open_dir("C:/Users/SirIsaac/Desktop/man.es");	
-	print "Creando archivo data...\n" ;
-	&open_dir("D:/man.es");
+	print "Creando archivo frecuencias...\n" ;
+	&open_dir($directorio);
 	print "Creando archivo vocabulario...\n";	
 	&escribir_archivo_vocabulario;
 	print "N es ".$N."\n";
@@ -61,7 +60,8 @@ sub open_dir{
 			open_dir($file,$hash);
 		}else{
 	   		#print $file."\n";
-	   		if($file =~ /\.txt$/){
+	   		if($file =~ /$patron/){
+				#Se incrementa la variable N (Número de documentos)
 				$N++;
 	   			&abrir_archivo($file);
 	   		}
@@ -159,7 +159,7 @@ sub abrir_archivo{
 	$primero = $sorted[0];
 	@sorted = undef;
 	
-	open (NUEVO, '>>data.txt');
+	open (NUEVO, '>>'.$prefijo.'_FC.txt');
 	print NUEVO $path.";".fileparse($path).";".$largo.";".$terminos{$primero}.";";
 		foreach $palabra (sort keys (%terminos)) {
 			if($palabra cmp "")
@@ -214,19 +214,24 @@ sub actualizar_vocabulario
 #Escribe el archivo con el vocabulario de la colección y el ni
 sub escribir_archivo_vocabulario
 {
-	open (NUEVO, '>>vocabulario.txt');
-	foreach $pal(sort keys (%vocabulario)) {
-		if($pal cmp "")
-		{
-			print NUEVO "(".$pal.",".$vocabulario{$pal}.")\n";
+	if(%vocabulario)
+	{
+		open (NUEVO, '>'.$prefijo.'_VO.txt');
+		foreach $pal(sort keys (%vocabulario)) {
+			if($pal cmp "")
+			{
+				print NUEVO "(".$pal.",".$vocabulario{$pal}.")\n";
+			}
 		}
+		close(NUEVO);
 	}
-	close(NUEVO);
+	else
+	{
+		print "Error, vocabulario no tiene elementos\n";
+	}
 }
 
 #--------------------------MAIN------------------------#
-#&crear_stops("C:/Users/SirIsaac/Desktop/stop.txt");
-#&crear_stops("D:\stop.txt");
 $comando = shift;
 if($comando eq "generar")
 {
@@ -241,7 +246,7 @@ if($comando eq "generar")
 	}
 	else
 	{
-		&crear_stops(""
+		&crear_stops;
 	}
 }
 elsif($comando eq "buscar")
