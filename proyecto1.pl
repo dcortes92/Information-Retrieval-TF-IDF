@@ -6,25 +6,59 @@
 
 #Necesario para el manejo de archivos
 use File::Basename;
+#Necesario para raiz
+use Math::Complex;
 
 #Arreglo para los stopwords
 @stopwords;
 #Hash para los términos de un documento, usado para el archivo de frecuencias
 %terminos;
+#Hash para los pesos de un documento
+%pesos;
 #Numero de documentos
 $N;
-#Bandera para saber cuando se termina de leer un archivo
-$bandera_archivo;
+#Bandera para cuando se escribe el archivo de frecuencias o el de pesos
+$bandera_accion;
 #Hash para el vocabulario de la colección
 %vocabulario = undef;
 #Arreglo para el vocabulario de cada archivo.
 @vocabulario_archivo;
 #----------------------Variables de la línea de comandos-----------------------
+#Generar
 $comando;
 $archivo_stopwords;
 $directorio;
 $patron;
 $prefijo;
+#Consulta
+$modalidad;
+$numinicio;
+$numfin;
+$prefijoconsulta;
+$escalafon;
+$archivoHTML;
+$consulta;
+#-------------------------Fin variables-------------------------
+
+#Calcular frecuencias
+sub calcular_frecuencias
+{
+	$bandera_accion = 1;
+	&crear_stops;
+	print "Creando archivo frecuencias...\n" ;
+	&open_dir;
+	print "Creando archivo vocabulario...\n";	
+	&escribir_archivo_vocabulario;
+	print "N es ".$N."\n";
+}
+
+#Calcular pesos
+sub calcular_pesos
+{
+	$bandera_accion = 0;
+	print "Creando archivo pesos...\n" ;
+	&open_dir;
+}
 
 #Almacena en el arreglo @stopwords las palabras leídas del archivo de texto de stopwords.
 sub crear_stops{
@@ -39,27 +73,19 @@ sub crear_stops{
 		chomp($linea);
 		#Se inserta la palabra en el arreglo.		
 		push(@stopwords, $linea);
-	}
-	#&open_dir("C:/Users/SirIsaac/Desktop/man.es");	
-	print "Creando archivo frecuencias...\n" ;
-	&open_dir($directorio);
-	print "Creando archivo vocabulario...\n";	
-	&escribir_archivo_vocabulario;
-	print "N es ".$N."\n";
+	}	
 }
 
 sub open_dir{
-	my ($path) = ($_[0]);
-	opendir(DIR, $path) or die $!;
+	opendir(DIR, $directorio) or die("Error, No se pudo abrir el directorio\n");
 	my @files = grep(!/^\./,readdir(DIR));
 	closedir(DIR);
 	foreach $file (@files){
-		$file = $path.'/'.$file; #path absoluto del fichero o directorio
+		$file = $directorio.'/'.$file; #path absoluto del fichero o directorio
 		next unless( -f $file or -d $file ); #se rechazan pipes, links, etc ..
 	   	if( -d $file){
 			open_dir($file,$hash);
 		}else{
-	   		#print $file."\n";
 	   		if($file =~ /$patron/){
 				#Se incrementa la variable N (Número de documentos)
 				$N++;
@@ -144,7 +170,7 @@ sub abrir_archivo{
 		for $word (@palabras){
 			if (($word =~ m/[a-z0-9_]+/)&!($word =~ m/^[0-9]+/)){
 				if(esta($word) == 1){
-					$terminos{$word}++;					
+					$terminos{$word}++;
 				}
 			}
 		}		
@@ -159,29 +185,67 @@ sub abrir_archivo{
 	$primero = $sorted[0];
 	@sorted = undef;
 	
-	open (NUEVO, '>>'.$prefijo.'_FC.txt');
-	print NUEVO $path.";".fileparse($path).";".$largo.";".$terminos{$primero}.";";
-		foreach $palabra (sort keys (%terminos)) {
+	#Frecuencias
+	if($bandera_accion == 1)
+	{
+		open (NUEVO, '>>'.$prefijo.'_FC.txt');
+		print NUEVO $path.";".fileparse($path).";".$largo.";".$terminos{$primero}.";";
+			foreach $palabra (sort keys (%terminos)) {
+				if($palabra cmp "")
+				{
+					print NUEVO "(".$palabra.",".$terminos{$palabra}.");";
+				}
+			}
+		print NUEVO "\n";
+		$largo = 0;
+		close (NUEVO);
+		
+		#Se almacena el vocabulario de cada archivo para el hash de vocabulario de la colección
+		foreach $word(sort keys (%terminos))
+		{
+			if($word cmp "")
+			{	
+				push(@vocabulario_archivo, $word);
+			}		
+		}	
+		
+		#Se actualiza el hash de vocabulario
+		&actualizar_vocabulario;
+	}
+	else #Pesos
+	{
+		$norma = 0;
+		foreach $pal(sort keys(%vocabulario))
+		{
+			if($pal cmp "")
+			{
+				$ni = $vocabulario{$pal};
+				$fij = $terminos{$pal};
+				if($fij > 0){
+					print "Peso para ".$pal." = "."(log(".$fij.")/log(2)+1)*(log(".$N."/".$ni.")/log(2))\n";
+					$pesos{$pal} = ((log($fij)/log(2))+1)*(log($N/$ni)/log(2));
+				}
+				else
+				{
+					$pesos{$pal} = 0;
+				}
+				$norma += $pesos{$pal} ** 2;
+			}			
+		}
+		$norma = sqrt($norma);
+		open (NUEVO, '>>'.$prefijo.'_PE.txt');
+		print NUEVO $path.";".fileparse($path).";".$largo.";".$norma;
+		foreach $palabra (sort keys (%pesos)) {
 			if($palabra cmp "")
 			{
-				print NUEVO "(".$palabra.",".$terminos{$palabra}.");";
+				print NUEVO "(".$palabra.",".$pesos{$palabra}.");";
 			}
 		}
-	print NUEVO "\n";
-	$largo = 0;
-	close (NUEVO);
-	
-	#Se almacena el vocabulario de cada archivo para el hash de vocabulario de la colección
-	foreach $word(sort keys (%terminos))
-	{
-		if($word cmp "")
-		{	
-			push(@vocabulario_archivo, $word);
-		}		
+		print NUEVO "\n";
+		close (NUEVO);
+		
 	}	
-	
-	#Se actualiza el hash de vocabulario
-	&actualizar_vocabulario;
+	%pesos = undef;
 	%terminos = undef;
 	@vocabulario_archivo = undef; 
 }
@@ -246,12 +310,29 @@ if($comando eq "generar")
 	}
 	else
 	{
-		&crear_stops;
+		&calcular_frecuencias;
+		&calcular_pesos;
 	}
 }
 elsif($comando eq "buscar")
 {
-	print "Buscar...\n";
+	$modalidad = shift;
+	$numinicio = shift;
+	$numfin = shift;
+	$prefijo = shift;
+	$prefijoconsulta = shift;
+	$escalafon = shift;
+	$archivoHTML = shift;
+	$consulta = shift;
+	
+	if($modalidad eq "" or $numinicio eq "" or $numfin eq "" or $prefijo eq "" or $prefijoconsulta eq "" or $escalafon eq "" or $archivoHTML eq "" or $consulta eq "")
+	{
+		print "Error, faltan parametros para generar\n";
+	}
+	else
+	{
+		print "Buscar...\n";
+	}
 }
 else
 {
