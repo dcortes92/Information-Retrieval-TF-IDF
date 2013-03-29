@@ -1,3 +1,9 @@
+# ISAAC! Para correr poner perl proyecto1.pl generar stop.txt D:\man.es .txt$ PRU
+# la ruta no importa porque ahorita no funciona el tomar la ruta como parámetro, igual lo del patron .txt$
+# Listo lo de pesos, si empieza con su parte de consultas, por fa seguir formato de abajo de declarar funciones
+# Pongale atencion a la vara de "MAIN" que hay abajo Pura vida mae!!!
+
+
 # I Tarea programada
 # Recuperación de Información Textual
 # Daniel Cortés Sáenz
@@ -235,11 +241,11 @@ sub abrir_archivo{
 		}
 		$norma = sqrt($norma);
 		open (NUEVO, '>>'.$prefijo.'_PE.txt');
-		print NUEVO $path.";".$largo.";".$norma;
+		printf NUEVO $path.";".$largo.";"."%.4f;",$norma;
 		foreach $palabra (sort keys (%pesos)) {
 			if($palabra cmp "")
 			{
-				print NUEVO "(".$palabra.",".$pesos{$palabra}.");";
+				printf NUEVO "(".$palabra.",%.4f);", $pesos{$palabra};
 			}
 		}
 		print NUEVO "\n";
