@@ -14,6 +14,9 @@
 use File::Basename;
 #Necesario para raiz
 use Math::Complex;
+#Necesario para obtener fecha de creacion de un archivo
+use File::stat;
+use Time::localtime;
 
 #Arreglo para los stopwords
 @stopwords;
@@ -347,7 +350,17 @@ sub busqueda_vectorial
 	#		print $pal.",".$fij_consulta{$pal}."\n";
 	#	}
 	#}
+	open(ESCALAFON, '>>'.$prefijoconsulta.'_'.$escalafon.'.html');
+		print ESCALAFON "<html><head><title>Resultados b&uacute;squeda</title></head><body>";
+		print ESCALAFON "<h1>Resultados b&uacute;squeda</h1><hr><br>";
+		print ESCALAFON "<table border = 1><tr><th>Pos.</th><th>Similitud</th><th>Ruta</th><th>Fecha Creci&oacute;n</th><th>Tama&ntilde;o en Bytes</th><th>N&uacute;mero de l&iacute;neas</th><th>Cantidad de palabras</th></tr>";
+	close(ESCALAFON);
+	
 	&abrir_archivo_pesos;
+	
+	open(ESCALAFON, '>>'.$prefijoconsulta.'_'.$escalafon.'.html');
+		print ESCALAFON "</table></body></html>";
+	close(ESCALAFON);
 	
 	my @command = ('start', $prefijoconsulta.'_'.$escalafon.'.html');
 	system(@command);
@@ -398,7 +411,8 @@ sub calcular_fij_consulta
 sub abrir_archivo_pesos
 {
 	my $linea;
-	my @arreglo_linea;
+	my @arreglo_linea;	
+	
 	open (PESOS, '<'.$prefijo."_PE.txt");
 	while(<PESOS>)
 	{
@@ -409,7 +423,7 @@ sub abrir_archivo_pesos
 		@arreglo_linea = undef;
 		%pesos_archivo = undef;
 	}
-	close(PESOS);
+	close(PESOS);	
 }
 
 sub calcular_peso_doci
@@ -428,6 +442,12 @@ sub calcular_peso_doci
 	$largo = @arreglo;
 	#Suma de multiplicacion de los pesos
 	$numerador = 0;
+	#Numero de lineas del archivo
+	$lineas_archivo;
+	#Tamaño en bytes del archivo;
+	$bytes_archivo;
+	#Fecha de creacion del archivo
+	$fecha_creacion;
 	#Se guarda en un hash los pesos de un archivo
 	for ($i = 3; $i < $largo; $i++)
 	{
@@ -474,15 +494,18 @@ sub calcular_peso_doci
 	$escalafon_archivo{$ruta_archivo} = $numerador / $norma;
 	#print "Similitud del archivo: ".$escalafon_archivo{$ruta_archivo}."\n\n\n";
 	
+	$bytes_archivo = -s $ruta_archivo;
+	open(ARCHIVO, $ruta_archivo);
+	my @temp = <ARCHIVO>;
+	close(ARCHIVO);
+	$lineas_archivo = @temp;
+	$lineas_archivo -= 1;
+	
+	$fecha_creacion = ctime( stat($ruta_archivo)->ctime);
+	
 	open(ESCALAFON, '>>'.$prefijoconsulta.'_'.$escalafon.'.html');
-		print ESCALAFON "<html><head><title>Resultados b&uacute;squeda</title></head><body>";
-		print ESCALAFON "<h1>Resultados b&uacute;squeda</h1><br>";
-		print ESCALAFON "<table border = 1><tr><th>Pos.</th><th>Similitud</th><th>Ruta</th><th>Fecha Creci&oacute;n</th><th>Tama&ntilde;io en Bytes</th><th>N&uacute;mero de l&iacute;neas</th><th>Cantidad de palabras</th></tr>";
-		print ESCALAFON "<tr><td>1.</td><td>".$escalafon_archivo{$ruta_archivo}."</td><td><a href=".fileparse($ruta_archivo).">".$ruta_archivo."</a></td><td>1.</td><td>1.</td><td>1.</td><td>".$largo."</td></tr>";
-		print ESCALAFON "<br><hr><br>";
-		print ESCALAFON "</body></html>";
+		print ESCALAFON "<tr><td>1.</td><td>".$escalafon_archivo{$ruta_archivo}."</td><td>".$ruta_archivo."</td><td>".$fecha_creacion."</td><td>".$bytes_archivo."</td><td>".$lineas_archivo."</td><td>".$terminos."</td></tr>";
 		#print ESCALAFON $path.";".fileparse($path).";".$largo.";".$terminos{$primero}.";";
-		
 	close(ESCALAFON);
 }
 
