@@ -404,6 +404,7 @@ sub abrir_archivo_pesos
 		@arreglo_linea = split(';', $linea);
 		&calcular_peso_doci(@arreglo_linea);
 		@arreglo_linea = undef;
+		%pesos_archivo = undef;
 	}
 	close(PESOS);
 }
@@ -434,6 +435,11 @@ sub calcular_peso_doci
 		$pesos_archivo{$arreglo_temp[0]} = $arreglo_temp[1];
 		@arreglo_temp = undef;
 	}
+	
+	foreach $pal(sort keys(%pesos_archivo))
+	{
+		print $pal."-".$pesos_archivo{$pal}."\n";
+	}
 
 	foreach $pal(sort keys(%vocabulario)) 
 	{	
@@ -459,15 +465,28 @@ sub calcular_peso_doci
 	{
 		if($pal cmp "")
 		{
-			print $pesos_consulta{$pal}."*".$pesos_archivo{$pal}."\n";
-			$numerador += ($pesos_consulta{$pal} * $pesos_archivo{$pal});
+			if($pesos_consulta{$pal} != 0)
+			{
+				#print $pesos_consulta{$pal}."*".$pesos_archivo{$pal}."\n";
+				$numerador += ($pesos_consulta{$pal} * $pesos_archivo{$pal});
+			}
 		}
 	}
-	print $numerador."/".$norma."\n";
+	#print $numerador."/".$norma."\n";
 	$escalafon_archivo{$ruta_archivo} = $numerador / $norma;
-	print "Similitud del archivo: ".$escalafon_archivo{$ruta_archivo}."\n";
+	#print "Similitud del archivo: ".$escalafon_archivo{$ruta_archivo}."\n\n\n";
 	
-	#open(ESCALAFON, '<<'.$prefijoconsulta.'_'.$escalafon.'html');
+	open(ESCALAFON, '<<'.$prefijoconsulta.'_'.$escalafon.'html');
+		print ESCALAFON "Content-Type: text/html\n\n";
+		print ESCALAFON "<html><head><title>Resultados b&uacute;squeda</title></head><body>";
+		print ESCALAFON "<h1>Resultados b&uacute;squeda</h1><br>";
+		print ESCALAFON "<table><tr><th>Pos.</th><th>Similitud</th><th>Ruta</th><th>Fecha Creci&oacute;n</th><th>Tama&ntilde;io en Bytes</th><th>N&uacute;mero de l&iacute;neas</th><th>Cantidad de palabras</th></tr>";
+		print ESCALAFON "<tr><td>1.</td><td>".$escalafon_archivo{$ruta_archivo}."</td><td>".$path."</td><td>1.</td><td>1.</td><td>1.</td><td>".$largo."</td></tr>";
+		print ESCALAFON "<br><hr><br>";
+		print ESCALAFON "</body></html>";
+		#print ESCALAFON $path.";".fileparse($path).";".$largo.";".$terminos{$primero}.";";
+		
+	close(ESCALAFON);
 	
 }
 
