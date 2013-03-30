@@ -29,6 +29,19 @@ $bandera_accion;
 %vocabulario = undef;
 #Arreglo para el vocabulario de cada archivo.
 @vocabulario_archivo;
+#Hash para el escalafón de la similitud coseno
+%escalafon_coseno;
+#Hash para los pesos de la consulta
+%pesos_consulta;
+#Hash para los pesos de un archivo
+%pesos_archivo;
+#Contador de la suma de la multiplicación del peso de wij * wiq
+$t = 0;
+#Hash para las frecuencias de los términos de la consulta
+%fij_consulta;
+#Arreglo que los elementos de una linea del archivo de pesos
+@arreglo_linea;
+
 #----------------------Variables de la línea de comandos-----------------------
 #Generar
 $comando;
@@ -44,6 +57,7 @@ $prefijoconsulta;
 $escalafon;
 $archivoHTML;
 $consulta;
+@parametros_consulta;
 #-------------------------Fin variables-------------------------
 
 #Calcular frecuencias
@@ -52,9 +66,10 @@ sub calcular_frecuencias
 	$bandera_accion = 1;
 	&crear_stops;
 	print "Creando archivo frecuencias...\n" ;
-	&open_dir("D:/man.es");
+	&open_dir("D:/archivos");
 	print "Creando archivo vocabulario...\n";	
 	&escribir_archivo_vocabulario;
+	&escribir_N;
 }
 
 #Calcular pesos
@@ -62,7 +77,7 @@ sub calcular_pesos
 {
 	$bandera_accion = 0;
 	print "Creando archivo pesos...\n" ;
-	&open_dir("D:/man.es");
+	&open_dir("D:/archivos");
 }
 
 #Almacena en el arreglo @stopwords las palabras leídas del archivo de texto de stopwords.
@@ -96,8 +111,8 @@ sub open_dir{
 				#Se incrementa la variable N (Número de documentos)
 				if($bandera_accion == 1){
 					$N++;
-				}				
-	   			&abrir_archivo($file);
+				}
+				&abrir_archivo($file);
 	   		}
 		}		
 	}
@@ -302,6 +317,160 @@ sub escribir_archivo_vocabulario
 	}
 }
 
+#Escribe el N para no tener que recorrer innecesariamente la colección
+sub escribir_N
+{
+	open (N, '>'.$prefijo.'_N.txt');
+		print N $N;
+	close (N);
+}
+
+#Busca usando la similitud coseno.
+sub busqueda_vectorial
+{
+	$t = @parametros_consulta;
+	&obtener_ni;
+	&obtener_N;
+	#foreach $pal(sort keys (%vocabulario))
+	#{
+	#	if($pal cmp "")
+	#	{
+	#		print $pal.",".$vocabulario{$pal}."\n";
+	#	}
+	#}
+	#print "N es: ".$N."\n";
+	&calcular_fij_consulta;
+	#foreach $pal(sort keys (%fij_consulta))
+	#{
+	#	if($pal cmp "")
+	#	{
+	#		print $pal.",".$fij_consulta{$pal}."\n";
+	#	}
+	#}
+	&abrir_archivo_pesos;
+}
+
+#Se leen los ni del archivo de vocabulario
+sub obtener_ni
+{
+	my $linea;
+	my @arreglo;
+	open(NIS, '<'.$prefijo."_VO.txt");
+	while(<NIS>)
+	{
+		$linea = $_;
+		chomp($linea);
+		$linea =~ s/[\(]//g;
+		$linea =~ s/[\)]//g;
+		@arreglo = split(',', $linea);
+		$vocabulario{$arreglo[0]} = $arreglo[1];
+		@arreglo = undef;
+	}
+	close(NIS);
+}
+
+#Se lee N (tamaño de la coleccion) del archivo
+sub obtener_N
+{
+	my $linea;
+	open (N, '<'.$prefijo."_N.txt");
+	while(<N>)
+	{
+		$linea = $_;
+		chomp($linea);
+		$N = $linea;
+	}
+	close(NIS);
+}
+
+sub calcular_fij_consulta
+{
+	#Para calcular las frecuencias de cada termmino en la consulta
+	for $palabra(@parametros_consulta)
+	{
+		$fij_consulta{$palabra}++;
+	}
+}
+
+sub abrir_archivo_pesos
+{
+	my $linea;
+	my @arreglo_linea;
+	open (PESOS, '<'.$prefijo."_PE.txt");
+	while(<PESOS>)
+	{
+		$linea = $_;
+		chomp($linea);
+		@arreglo_linea = split(';', $linea);
+		&calcular_peso_doci(@arreglo_linea);
+		@arreglo_linea = undef;
+	}
+	close(PESOS);
+}
+
+sub calcular_peso_doci
+{
+	my @arreglo = @_;
+	#Ruta relativa del archivo
+	$ruta_archivo = $arreglo[0];
+	#print "RUTA ARCHIVO: ".$ruta_archivo."\n";
+	#Número de términos distintos del archivo
+	$terminos = $arreglo[1];
+	#print "NUMERO DE TERMINOS: ".$terminos."\n";
+	#Norma vectorial del archivo
+	$norma = $arreglo[2];
+	#print "NORMA: ".$norma."\n";
+	#Largo de la línea
+	$largo = @arreglo;
+	#Suma de multiplicacion de los pesos
+	$numerador = 0;
+	#Se guarda en un hash los pesos de un archivo
+	for ($i = 3; $i < $largo; $i++)
+	{
+		$linea = $arreglo[$i];
+		$linea =~ s/[\(]//g;
+		$linea =~ s/[\)]//g;
+		@arreglo_temp = split(",", $linea);
+		$pesos_archivo{$arreglo_temp[0]} = $arreglo_temp[1];
+		@arreglo_temp = undef;
+	}
+
+	foreach $pal(sort keys(%vocabulario)) 
+	{	
+		if($pal cmp "")
+		{
+			#print $pal."\n";
+			$ni = $vocabulario{$pal};			
+			#print "NI: ".$ni."\n";
+			$fij = $fij_consulta{$pal};			
+			#print "FIJ: ".$fij."\n";
+			if($fij > 0){
+				$pesos_consulta{$pal} = ((log($fij)/log(2))+1)*(log($N/$ni)/log(2));
+				#print "Peso de ".$pal." en la consulta ".$pesos_consulta{$pal}."\n";
+			}
+			else
+			{
+				$pesos_consulta{$pal} = 0;
+			}
+		}
+	}
+	
+	foreach $pal(sort keys(%pesos_consulta))
+	{
+		if($pal cmp "")
+		{
+			print $pesos_consulta{$pal}."*".$pesos_archivo{$pal}."\n";
+			$numerador += ($pesos_consulta{$pal} * $pesos_archivo{$pal});
+		}
+	}
+	print $numerador."/".$norma."\n";
+	$escalafon_archivo{$ruta_archivo} = $numerador / $norma;
+	print "Similitud del archivo: ".$escalafon_archivo{$ruta_archivo}."\n";
+	
+	#open(ESCALAFON, '<<'.$prefijoconsulta.'_'.$escalafon.'html');
+	
+}
+
 #--------------------------MAIN------------------------#
 $comando = shift;
 if($comando eq "generar")
@@ -338,7 +507,16 @@ elsif($comando eq "buscar")
 	}
 	else
 	{
-		print "Buscar...\n";
+		@parametros_consulta = split (' ', $consulta);
+		if($parametros_consulta[0] =~ m/[0-9]+/)
+		{
+			#Busqueda binaria
+		}
+		else
+		{
+			#Busqueda vectorial
+			&busqueda_vectorial
+		}
 	}
 }
 else
