@@ -348,6 +348,9 @@ sub busqueda_vectorial
 	#	}
 	#}
 	&abrir_archivo_pesos;
+	
+	my @command = ('start', $prefijoconsulta.'_'.$escalafon.'.html');
+	system(@command);
 }
 
 #Se leen los ni del archivo de vocabulario
@@ -436,11 +439,6 @@ sub calcular_peso_doci
 		@arreglo_temp = undef;
 	}
 	
-	foreach $pal(sort keys(%pesos_archivo))
-	{
-		print $pal."-".$pesos_archivo{$pal}."\n";
-	}
-
 	foreach $pal(sort keys(%vocabulario)) 
 	{	
 		if($pal cmp "")
@@ -476,18 +474,16 @@ sub calcular_peso_doci
 	$escalafon_archivo{$ruta_archivo} = $numerador / $norma;
 	#print "Similitud del archivo: ".$escalafon_archivo{$ruta_archivo}."\n\n\n";
 	
-	open(ESCALAFON, '<<'.$prefijoconsulta.'_'.$escalafon.'html');
-		print ESCALAFON "Content-Type: text/html\n\n";
+	open(ESCALAFON, '>>'.$prefijoconsulta.'_'.$escalafon.'.html');
 		print ESCALAFON "<html><head><title>Resultados b&uacute;squeda</title></head><body>";
 		print ESCALAFON "<h1>Resultados b&uacute;squeda</h1><br>";
-		print ESCALAFON "<table><tr><th>Pos.</th><th>Similitud</th><th>Ruta</th><th>Fecha Creci&oacute;n</th><th>Tama&ntilde;io en Bytes</th><th>N&uacute;mero de l&iacute;neas</th><th>Cantidad de palabras</th></tr>";
-		print ESCALAFON "<tr><td>1.</td><td>".$escalafon_archivo{$ruta_archivo}."</td><td>".$path."</td><td>1.</td><td>1.</td><td>1.</td><td>".$largo."</td></tr>";
+		print ESCALAFON "<table border = 1><tr><th>Pos.</th><th>Similitud</th><th>Ruta</th><th>Fecha Creci&oacute;n</th><th>Tama&ntilde;io en Bytes</th><th>N&uacute;mero de l&iacute;neas</th><th>Cantidad de palabras</th></tr>";
+		print ESCALAFON "<tr><td>1.</td><td>".$escalafon_archivo{$ruta_archivo}."</td><td><a href=".fileparse($ruta_archivo).">".$ruta_archivo."</a></td><td>1.</td><td>1.</td><td>1.</td><td>".$largo."</td></tr>";
 		print ESCALAFON "<br><hr><br>";
 		print ESCALAFON "</body></html>";
 		#print ESCALAFON $path.";".fileparse($path).";".$largo.";".$terminos{$primero}.";";
 		
 	close(ESCALAFON);
-	
 }
 
 #--------------------------MAIN------------------------#
