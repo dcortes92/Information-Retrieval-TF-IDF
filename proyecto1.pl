@@ -67,9 +67,10 @@ $consulta;
 sub calcular_frecuencias
 {
 	$bandera_accion = 1;
+	my ($dir) = ($_[0]);
 	&crear_stops;
 	print "Creando archivo frecuencias...\n" ;
-	&open_dir("D:/archivos");
+	&open_dir($dir);
 	print "Creando archivo vocabulario...\n";	
 	&escribir_archivo_vocabulario;
 	&escribir_N;
@@ -79,8 +80,9 @@ sub calcular_frecuencias
 sub calcular_pesos
 {
 	$bandera_accion = 0;
+	my ($dir) = ($_[0]);
 	print "Creando archivo pesos...\n" ;
-	&open_dir("D:/archivos");
+	&open_dir($dir);
 }
 
 #Almacena en el arreglo @stopwords las palabras leídas del archivo de texto de stopwords.
@@ -334,36 +336,29 @@ sub busqueda_vectorial
 	$t = @parametros_consulta;
 	&obtener_ni;
 	&obtener_N;
-	#foreach $pal(sort keys (%vocabulario))
-	#{
-	#	if($pal cmp "")
-	#	{
-	#		print $pal.",".$vocabulario{$pal}."\n";
-	#	}
-	#}
-	#print "N es: ".$N."\n";
 	&calcular_fij_consulta;
-	#foreach $pal(sort keys (%fij_consulta))
-	#{
-	#	if($pal cmp "")
-	#	{
-	#		print $pal.",".$fij_consulta{$pal}."\n";
-	#	}
-	#}
-	open(ESCALAFON, '>>'.$prefijoconsulta.'_'.$escalafon.'.html');
-		print ESCALAFON "<html><head><title>Resultados b&uacute;squeda</title></head><body>";
-		print ESCALAFON "<h1>Resultados b&uacute;squeda</h1><hr><br>";
-		print ESCALAFON "<table border = 1><tr><th>Pos.</th><th>Similitud</th><th>Ruta</th><th>Fecha Creci&oacute;n</th><th>Tama&ntilde;o en Bytes</th><th>N&uacute;mero de l&iacute;neas</th><th>Cantidad de palabras</th></tr>";
+
+	#Se abre el archivo HTML
+	#open(ESCALAFON, '>>'.$prefijoconsulta.'_'.$archivoHTML.'.html');
+	#	print ESCALAFON "<html><head><title>Resultados b&uacute;squeda</title></head><body>";
+	#	print ESCALAFON "<h1>Resultados b&uacute;squeda &ldquo;".$consulta."&rdquo;</h1><hr><br>";
+	#	print ESCALAFON "<table border = 1><tr><th>Pos.</th><th>Similitud</th><th>Ruta</th><th>Fecha Creci&oacute;n</th><th>Tama&ntilde;o en Bytes</th><th>N&uacute;mero de l&iacute;neas</th><th>Cantidad de palabras</th></tr>";
 	close(ESCALAFON);
 	
 	&abrir_archivo_pesos;
 	
-	open(ESCALAFON, '>>'.$prefijoconsulta.'_'.$escalafon.'.html');
-		print ESCALAFON "</table></body></html>";
-	close(ESCALAFON);
+	print "Creando archivo ".$escalafon."_Escalafon.txt ...\n";
+	&escribir_archivo_escalafon;
+	#&escribir_archivo_HTML;
 	
-	my @command = ('start', $prefijoconsulta.'_'.$escalafon.'.html');
-	system(@command);
+	#Cierre del archivo HTML
+	#open(ESCALAFON, '>>'.$prefijoconsulta.'_'.$archivoHTML.'.html');
+	#	print ESCALAFON "</table></body></html>";
+	#close(ESCALAFON);
+	
+	#Se invoca al navegador predeterminado
+	#my @command = ('start', $prefijoconsulta.'_'.$archivoHTML.'.html');
+	#system(@command);
 }
 
 #Se leen los ni del archivo de vocabulario
@@ -399,15 +394,17 @@ sub obtener_N
 	close(NIS);
 }
 
+#Para calcular las frecuencias de cada termmino en la consulta
 sub calcular_fij_consulta
 {
-	#Para calcular las frecuencias de cada termmino en la consulta
+	
 	for $palabra(@parametros_consulta)
 	{
 		$fij_consulta{$palabra}++;
 	}
 }
 
+#Para obtener los datos del archivo de pesos
 sub abrir_archivo_pesos
 {
 	my $linea;
@@ -443,11 +440,11 @@ sub calcular_peso_doci
 	#Suma de multiplicacion de los pesos
 	$numerador = 0;
 	#Numero de lineas del archivo
-	$lineas_archivo;
+	#$lineas_archivo;
 	#Tamaño en bytes del archivo;
-	$bytes_archivo;
+	#$bytes_archivo;
 	#Fecha de creacion del archivo
-	$fecha_creacion;
+	#$fecha_creacion;
 	#Se guarda en un hash los pesos de un archivo
 	for ($i = 3; $i < $largo; $i++)
 	{
@@ -459,18 +456,15 @@ sub calcular_peso_doci
 		@arreglo_temp = undef;
 	}
 	
+	#Se calculan los pesos de los wiq
 	foreach $pal(sort keys(%vocabulario)) 
 	{	
 		if($pal cmp "")
 		{
-			#print $pal."\n";
-			$ni = $vocabulario{$pal};			
-			#print "NI: ".$ni."\n";
-			$fij = $fij_consulta{$pal};			
-			#print "FIJ: ".$fij."\n";
+			$ni = $vocabulario{$pal};
+			$fij = $fij_consulta{$pal};
 			if($fij > 0){
 				$pesos_consulta{$pal} = ((log($fij)/log(2))+1)*(log($N/$ni)/log(2));
-				#print "Peso de ".$pal." en la consulta ".$pesos_consulta{$pal}."\n";
 			}
 			else
 			{
@@ -479,34 +473,58 @@ sub calcular_peso_doci
 		}
 	}
 	
+	#Fórmula de similitud de coseno
 	foreach $pal(sort keys(%pesos_consulta))
 	{
 		if($pal cmp "")
 		{
 			if($pesos_consulta{$pal} != 0)
 			{
-				#print $pesos_consulta{$pal}."*".$pesos_archivo{$pal}."\n";
 				$numerador += ($pesos_consulta{$pal} * $pesos_archivo{$pal});
 			}
 		}
 	}
-	#print $numerador."/".$norma."\n";
-	$escalafon_archivo{$ruta_archivo} = $numerador / $norma;
-	#print "Similitud del archivo: ".$escalafon_archivo{$ruta_archivo}."\n\n\n";
+	#Formula de similitud de coseno, se almacena en el hash
+	$escalafon_coseno{$ruta_archivo} = $numerador / $norma;
 	
-	$bytes_archivo = -s $ruta_archivo;
-	open(ARCHIVO, $ruta_archivo);
-	my @temp = <ARCHIVO>;
-	close(ARCHIVO);
-	$lineas_archivo = @temp;
-	$lineas_archivo -= 1;
+	#Se obtienen los bytes del archivo
+	#$bytes_archivo = -s $ruta_archivo;
+	#Se obtiene el número de líneas del archivo
+	#open(ARCHIVO, $ruta_archivo);
+	#my @temp = <ARCHIVO>;
+	#close(ARCHIVO);
+	#$lineas_archivo = @temp;
+	#$lineas_archivo -= 1;
+	#Se obtiene la fecha de creación del archivo
+	#$fecha_creacion = ctime( stat($ruta_archivo)->ctime);
 	
-	$fecha_creacion = ctime( stat($ruta_archivo)->ctime);
-	
-	open(ESCALAFON, '>>'.$prefijoconsulta.'_'.$escalafon.'.html');
-		print ESCALAFON "<tr><td>1.</td><td>".$escalafon_archivo{$ruta_archivo}."</td><td>".$ruta_archivo."</td><td>".$fecha_creacion."</td><td>".$bytes_archivo."</td><td>".$lineas_archivo."</td><td>".$terminos."</td></tr>";
-		#print ESCALAFON $path.";".fileparse($path).";".$largo.";".$terminos{$primero}.";";
-	close(ESCALAFON);
+	#Creación del Archivo HTML falta obtener los rangos y la descripción del archivo.
+	#open(ESCALAFON, '>>'.$prefijoconsulta.'_'.$archivoHTML.'.html');
+	#	print ESCALAFON "<tr><td>1.</td><td>".$escalafon_archivo{$ruta_archivo}."</td><td>".$ruta_archivo."</td><td>".$fecha_creacion."</td><td>".$bytes_archivo."</td><td>".$lineas_archivo."</td><td>".$terminos."</td></tr>";
+	#close(ESCALAFON);
+}
+
+sub escribir_archivo_escalafon
+{
+	if(%escalafon_coseno)
+	{
+		$contador = 1;
+		@escalafon_ordenado = sort { $escalafon_coseno{$a} < $escalafon_coseno{$b} } keys %escalafon_coseno;
+		open (NUEVO, '>'.$escalafon.'_Escalafon.txt');
+		print NUEVO "Posición\tRuta Archivo\tSimilitud\n";
+		for $pal(@escalafon_ordenado) {
+			if($pal cmp "")
+			{
+				print NUEVO $contador.".\t".$pal."\t".$escalafon_coseno{$pal}."\n";
+				$contador++;
+			}
+		}
+		close(NUEVO);
+	}
+	else
+	{
+		print "Error, escalafon no tiene elementos\n";
+	}
 }
 
 #--------------------------MAIN------------------------#
@@ -524,8 +542,8 @@ if($comando eq "generar")
 	}
 	else
 	{
-		&calcular_frecuencias;
-		&calcular_pesos;
+		&calcular_frecuencias($directorio);
+		&calcular_pesos($directorio);
 	}
 }
 elsif($comando eq "buscar")
