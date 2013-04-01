@@ -17,6 +17,8 @@ use Math::Complex;
 #Necesario para obtener fecha de creacion de un archivo
 use File::stat;
 use Time::localtime;
+#Para leer todo el archivo de una vez y no línea por línea
+use File::Slurp;
 
 #Arreglo para los stopwords
 @stopwords;
@@ -347,12 +349,10 @@ sub busqueda_vectorial
 	print "Calculando peso de la consulta\n";
 	&calcular_pesos_consulta;
 
-	
-	
 	print "Leyendo archivo ".$prefijo."_PE.txt\n";
 	&abrir_archivo_pesos;
 	
-	print "Creando archivo ".$escalafon."_Escalafon.txt ...\n";
+	print "Creando archivo ".$prefijoconsulta.'_'.$escalafon.".txt ...\n";
 	
 	#Se abre el archivo HTML
 	open(ESCALAFON, '>>'.$prefijoconsulta.'_'.$archivoHTML.'.html');
@@ -361,6 +361,8 @@ sub busqueda_vectorial
 	close(ESCALAFON);
 	
 	&escribir_archivo_escalafon;
+	
+	print "Creando archivo ".$prefijoconsulta.'_'.$archivoHTML.".html ...\n";
 	&escribir_archivo_HTML;
 	
 	#Cierre del archivo HTML
@@ -507,7 +509,7 @@ sub escribir_archivo_escalafon
 	if(%escalafon_coseno)
 	{
 		$contador = 1;
-		open (NUEVO, '>'.$escalafon.'_Escalafon.txt');
+		open (NUEVO, '>'.$prefijoconsulta.'_'.$escalafon.'.txt');
 		print NUEVO "Posición\tRuta Archivo\t\tSimilitud\n";
 		#Se ordena descendentemente el hash
 		foreach $pal (sort { $escalafon_coseno{$b} <=> $escalafon_coseno{$a} } keys %escalafon_coseno) {
@@ -534,7 +536,7 @@ sub escribir_archivo_HTML
 		#Contador i para el rango del escalafon
 		$i = 1;
 		#Contador j para el rango del escalafon
-		$j = $numfin;
+		$j = 1;
 		#Contador de posiciones en el escalafon
 		$posicion;
 		#Numero de lineas del archivo
@@ -548,13 +550,15 @@ sub escribir_archivo_HTML
 		#Primeros 200 caracteres del archivo.
 		$prim_200_caracteres;
 		
-		$posicion = $i;
+		$posicion = $i;	
+		
+		open(ESCALAFON, '>>'.$prefijoconsulta.'_'.$archivoHTML.'.html');
 		
 		foreach $pal (sort { $escalafon_coseno{$b} <=> $escalafon_coseno{$a} } keys %escalafon_coseno) {
 			if($pal cmp "")
 			{
 				if($i == $numinicio)
-				{					
+				{
 					last if($j > $numfin);
 					
 					$lineas_archivo = &obtener_lineas_archivo($pal);
@@ -563,22 +567,28 @@ sub escribir_archivo_HTML
 					$terminos = $terminos_distintos_archivo{$pal};
 					$prim_200_caracteres = &obtener_caracteres_archivo($pal);
 					
-					
-					open(ESCALAFON, '>>'.$prefijoconsulta.'_'.$archivoHTML.'.html');
-						print ESCALAFON "<table border = 1><tr><th>Pos.</th><th>Similitud</th><th>Ruta</th><th>Fecha Creci&oacute;n</th><th>Tama&ntilde;o en Bytes</th><th>N&uacute;mero de l&iacute;neas</th><th>Cantidad de palabras</th></tr>";
-						print ESCALAFON "<tr><td>".$posicion.".</td><td>".$escalafon_coseno{$pal}."</td><td>".$pal."</td><td>".$fecha_creacion."</td><td>".$bytes_archivo."</td><td>".$lineas_archivo."</td><td>".$terminos."</td></tr></table><br>";
-						print ESCALAFON "Vista preliminar del archivo: ".$prim_200_caracteres."<hr><br>";
-					close(ESCALAFON);
-					
+					print ESCALAFON "<table border = 1><tr><th>Pos.</th><th>Similitud</th><th>Ruta</th><th>Fecha Creci&oacute;n</th><th>Tama&ntilde;o en Bytes</th><th>N&uacute;mero de l&iacute;neas</th><th>Cantidad de palabras</th></tr>";
+					print ESCALAFON "<tr><td>".$posicion.".</td><td>".$escalafon_coseno{$pal}."</td><td>".$pal."</td><td>".$fecha_creacion."</td><td>".$bytes_archivo."</td><td>".$lineas_archivo."</td><td>".$terminos."</td></tr></table><br>";
+					print ESCALAFON "<b>Vista preliminar del archivo:</b> <p>".$prim_200_caracteres."...</p><hr><br>";				
 					$j++;
 					$posicion++;
+					
+					$lineas_archivo = undef;
+					$bytes_archivo = undef;
+					$fecha_creacion = undef;
+					$terminos = undef;
+					$prim_200_caracteres = undef;
 				}
 				else
 				{
 					$i++;
+					$j++;
 				}				
 			}
-		}				
+		}
+
+		close(ESCALAFON);
+		
 	}
 	else
 	{
@@ -617,9 +627,19 @@ sub obtener_fecha_creacion_archivo
 	return $fecha;
 }
 
+#Obtiene los primeros 200 caracteres del archivo.
 sub obtener_caracteres_archivo
 {
 	my ($dir) = ($_[0]);
+	#print "Leyendo ".$dir."\n";
+	my $texto = read_file($dir);
+	#Reemplaza dos o más espacios por uno solo
+	$texto =~ tr/  +/ /s;
+	#Remplaza los cambios de línea por 3 espacios.
+	$texto =~ tr/\n/   /s;
+	my $texto = substr($texto, 0, 200);
+	
+	return $texto;
 }
 
 #--------------------------MAIN------------------------#
