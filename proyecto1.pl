@@ -334,8 +334,11 @@ sub escribir_N
 sub busqueda_vectorial
 {
 	$t = @parametros_consulta;
+	print "Obtieniendo los ni\n";
 	&obtener_ni;
+	print "Obtieniendo N\n";
 	&obtener_N;
+	print "Calculando fiq\n";
 	&calcular_fij_consulta;
 
 	#Se abre el archivo HTML
@@ -343,8 +346,9 @@ sub busqueda_vectorial
 	#	print ESCALAFON "<html><head><title>Resultados b&uacute;squeda</title></head><body>";
 	#	print ESCALAFON "<h1>Resultados b&uacute;squeda &ldquo;".$consulta."&rdquo;</h1><hr><br>";
 	#	print ESCALAFON "<table border = 1><tr><th>Pos.</th><th>Similitud</th><th>Ruta</th><th>Fecha Creci&oacute;n</th><th>Tama&ntilde;o en Bytes</th><th>N&uacute;mero de l&iacute;neas</th><th>Cantidad de palabras</th></tr>";
-	close(ESCALAFON);
+	#close(ESCALAFON);
 	
+	print "Leyendo archivo ".$prefijo."_PE.txt\n";
 	&abrir_archivo_pesos;
 	
 	print "Creando archivo ".$escalafon."_Escalafon.txt ...\n";
@@ -485,7 +489,11 @@ sub calcular_peso_doci
 		}
 	}
 	#Formula de similitud de coseno, se almacena en el hash
-	$escalafon_coseno{$ruta_archivo} = $numerador / $norma;
+	if($norma > 0)
+	{
+		$escalafon_coseno{$ruta_archivo} = $numerador / $norma;
+		print "\tCalculada similitud con archivo ".fileparse($ruta_archivo)."\n";
+	}
 	
 	#Se obtienen los bytes del archivo
 	#$bytes_archivo = -s $ruta_archivo;
@@ -509,14 +517,16 @@ sub escribir_archivo_escalafon
 	if(%escalafon_coseno)
 	{
 		$contador = 1;
-		@escalafon_ordenado = sort { $escalafon_coseno{$a} < $escalafon_coseno{$b} } keys %escalafon_coseno;
 		open (NUEVO, '>'.$escalafon.'_Escalafon.txt');
-		print NUEVO "Posición\tRuta Archivo\tSimilitud\n";
-		for $pal(@escalafon_ordenado) {
+		print NUEVO "Posición\tRuta Archivo\t\tSimilitud\n";
+		#Se ordena descendentemente el hash
+		foreach $pal (sort { $escalafon_coseno{$b} <=> $escalafon_coseno{$a} } keys %escalafon_coseno) {
 			if($pal cmp "")
 			{
-				print NUEVO $contador.".\t".$pal."\t".$escalafon_coseno{$pal}."\n";
+				printf NUEVO $contador.".\t".$pal."\t\t"."%.4f",$escalafon_coseno{$pal};
+				print NUEVO "\n";
 				$contador++;
+				
 			}
 		}
 		close(NUEVO);
@@ -571,6 +581,7 @@ elsif($comando eq "buscar")
 		else
 		{
 			#Busqueda vectorial
+			print "Búsqueda vectorial\n";
 			&busqueda_vectorial
 		}
 	}
