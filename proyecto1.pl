@@ -44,6 +44,8 @@ $t = 0;
 %fij_consulta;
 #Arreglo que los elementos de una linea del archivo de pesos
 @arreglo_linea;
+#Norma de la consulta
+$norma_consulta;
 
 #----------------------Variables de la línea de comandos-----------------------
 #Generar
@@ -337,9 +339,11 @@ sub busqueda_vectorial
 	print "Obtieniendo los ni\n";
 	&obtener_ni;
 	print "Obtieniendo N\n";
-	&obtener_N;
+	&obtener_N;	
 	print "Calculando fiq\n";
 	&calcular_fij_consulta;
+	print "Calculando peso de la consulta\n";
+	&calcular_pesos_consulta;
 
 	#Se abre el archivo HTML
 	#open(ESCALAFON, '>>'.$prefijoconsulta.'_'.$archivoHTML.'.html');
@@ -458,24 +462,7 @@ sub calcular_peso_doci
 		@arreglo_temp = split(",", $linea);
 		$pesos_archivo{$arreglo_temp[0]} = $arreglo_temp[1];
 		@arreglo_temp = undef;
-	}
-	
-	#Se calculan los pesos de los wiq
-	foreach $pal(sort keys(%vocabulario)) 
-	{	
-		if($pal cmp "")
-		{
-			$ni = $vocabulario{$pal};
-			$fij = $fij_consulta{$pal};
-			if($fij > 0){
-				$pesos_consulta{$pal} = ((log($fij)/log(2))+1)*(log($N/$ni)/log(2));
-			}
-			else
-			{
-				$pesos_consulta{$pal} = 0;
-			}
-		}
-	}
+	}	
 	
 	#Fórmula de similitud de coseno
 	foreach $pal(sort keys(%pesos_consulta))
@@ -488,10 +475,11 @@ sub calcular_peso_doci
 			}
 		}
 	}
+	
 	#Formula de similitud de coseno, se almacena en el hash
 	if($norma > 0)
 	{
-		$escalafon_coseno{$ruta_archivo} = $numerador / $norma;
+		$escalafon_coseno{$ruta_archivo} = $numerador / ($norma * $norma_consulta);
 		print "\tCalculada similitud con archivo ".fileparse($ruta_archivo)."\n";
 	}
 	
@@ -510,6 +498,27 @@ sub calcular_peso_doci
 	#open(ESCALAFON, '>>'.$prefijoconsulta.'_'.$archivoHTML.'.html');
 	#	print ESCALAFON "<tr><td>1.</td><td>".$escalafon_archivo{$ruta_archivo}."</td><td>".$ruta_archivo."</td><td>".$fecha_creacion."</td><td>".$bytes_archivo."</td><td>".$lineas_archivo."</td><td>".$terminos."</td></tr>";
 	#close(ESCALAFON);
+}
+
+sub calcular_pesos_consulta{
+	#Se calculan los pesos de los wiq
+	foreach $pal(sort keys(%vocabulario)) 
+	{	
+		if($pal cmp "")
+		{
+			$ni = $vocabulario{$pal};
+			$fij = $fij_consulta{$pal};
+			if($fij > 0){
+				$pesos_consulta{$pal} = ((log($fij)/log(2))+1)*(log($N/$ni)/log(2));
+				$norma_consulta += $pesos_consulta{$pal} ** 2;
+			}
+			else
+			{
+				$pesos_consulta{$pal} = 0;
+			}
+		}
+	}
+	$norma_consulta = sqrt($norma_consulta);
 }
 
 sub escribir_archivo_escalafon
