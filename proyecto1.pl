@@ -46,6 +46,8 @@ $t = 0;
 @arreglo_linea;
 #Norma de la consulta
 $norma_consulta;
+#Hash que tiene la cantidad de términos distintos de un archivo
+%terminos_distintos_archivo;
 
 #----------------------Variables de la línea de comandos-----------------------
 #Generar
@@ -345,28 +347,30 @@ sub busqueda_vectorial
 	print "Calculando peso de la consulta\n";
 	&calcular_pesos_consulta;
 
-	#Se abre el archivo HTML
-	#open(ESCALAFON, '>>'.$prefijoconsulta.'_'.$archivoHTML.'.html');
-	#	print ESCALAFON "<html><head><title>Resultados b&uacute;squeda</title></head><body>";
-	#	print ESCALAFON "<h1>Resultados b&uacute;squeda &ldquo;".$consulta."&rdquo;</h1><hr><br>";
-	#	print ESCALAFON "<table border = 1><tr><th>Pos.</th><th>Similitud</th><th>Ruta</th><th>Fecha Creci&oacute;n</th><th>Tama&ntilde;o en Bytes</th><th>N&uacute;mero de l&iacute;neas</th><th>Cantidad de palabras</th></tr>";
-	#close(ESCALAFON);
+	
 	
 	print "Leyendo archivo ".$prefijo."_PE.txt\n";
 	&abrir_archivo_pesos;
 	
 	print "Creando archivo ".$escalafon."_Escalafon.txt ...\n";
+	
+	#Se abre el archivo HTML
+	open(ESCALAFON, '>>'.$prefijoconsulta.'_'.$archivoHTML.'.html');
+		print ESCALAFON "<html><head><title>Resultados b&uacute;squeda</title></head><body>";
+		print ESCALAFON "<h1>Resultados b&uacute;squeda &ldquo;".$consulta."&rdquo;</h1><hr><br>";		
+	close(ESCALAFON);
+	
 	&escribir_archivo_escalafon;
-	#&escribir_archivo_HTML;
+	&escribir_archivo_HTML;
 	
 	#Cierre del archivo HTML
-	#open(ESCALAFON, '>>'.$prefijoconsulta.'_'.$archivoHTML.'.html');
-	#	print ESCALAFON "</table></body></html>";
-	#close(ESCALAFON);
+	open(ESCALAFON, '>>'.$prefijoconsulta.'_'.$archivoHTML.'.html');
+		print ESCALAFON "</body></html>";
+	close(ESCALAFON);
 	
 	#Se invoca al navegador predeterminado
-	#my @command = ('start', $prefijoconsulta.'_'.$archivoHTML.'.html');
-	#system(@command);
+	my @command = ('start', $prefijoconsulta.'_'.$archivoHTML.'.html');
+	system(@command);
 }
 
 #Se leen los ni del archivo de vocabulario
@@ -436,10 +440,9 @@ sub calcular_peso_doci
 	my @arreglo = @_;
 	#Ruta relativa del archivo
 	$ruta_archivo = $arreglo[0];
-	#print "RUTA ARCHIVO: ".$ruta_archivo."\n";
-	#Número de términos distintos del archivo
-	$terminos = $arreglo[1];
-	#print "NUMERO DE TERMINOS: ".$terminos."\n";
+	#Número de términos distintos del archivo, se almacena en memoria para evitar
+	#abrir de nuevo el archivo de pesos para escribir el archivo HTML
+	$terminos_distintos_archivo{$ruta_archivo} = $arreglo[1];
 	#Norma vectorial del archivo
 	$norma = $arreglo[2];
 	#print "NORMA: ".$norma."\n";
@@ -447,12 +450,6 @@ sub calcular_peso_doci
 	$largo = @arreglo;
 	#Suma de multiplicacion de los pesos
 	$numerador = 0;
-	#Numero de lineas del archivo
-	#$lineas_archivo;
-	#Tamaño en bytes del archivo;
-	#$bytes_archivo;
-	#Fecha de creacion del archivo
-	#$fecha_creacion;
 	#Se guarda en un hash los pesos de un archivo
 	for ($i = 3; $i < $largo; $i++)
 	{
@@ -482,22 +479,6 @@ sub calcular_peso_doci
 		$escalafon_coseno{$ruta_archivo} = $numerador / ($norma * $norma_consulta);
 		print "\tCalculada similitud con archivo ".fileparse($ruta_archivo)."\n";
 	}
-	
-	#Se obtienen los bytes del archivo
-	#$bytes_archivo = -s $ruta_archivo;
-	#Se obtiene el número de líneas del archivo
-	#open(ARCHIVO, $ruta_archivo);
-	#my @temp = <ARCHIVO>;
-	#close(ARCHIVO);
-	#$lineas_archivo = @temp;
-	#$lineas_archivo -= 1;
-	#Se obtiene la fecha de creación del archivo
-	#$fecha_creacion = ctime( stat($ruta_archivo)->ctime);
-	
-	#Creación del Archivo HTML falta obtener los rangos y la descripción del archivo.
-	#open(ESCALAFON, '>>'.$prefijoconsulta.'_'.$archivoHTML.'.html');
-	#	print ESCALAFON "<tr><td>1.</td><td>".$escalafon_archivo{$ruta_archivo}."</td><td>".$ruta_archivo."</td><td>".$fecha_creacion."</td><td>".$bytes_archivo."</td><td>".$lineas_archivo."</td><td>".$terminos."</td></tr>";
-	#close(ESCALAFON);
 }
 
 sub calcular_pesos_consulta{
@@ -546,6 +527,101 @@ sub escribir_archivo_escalafon
 	}
 }
 
+sub escribir_archivo_HTML
+{
+	if(%escalafon_coseno)
+	{
+		#Contador i para el rango del escalafon
+		$i = 1;
+		#Contador j para el rango del escalafon
+		$j = $numfin;
+		#Contador de posiciones en el escalafon
+		$posicion;
+		#Numero de lineas del archivo
+		$lineas_archivo;
+		#Tamaño en bytes del archivo;
+		$bytes_archivo;
+		#Fecha de creacion del archivo
+		$fecha_creacion;
+		#Número de términos distintos del archivo
+		$terminos;
+		#Primeros 200 caracteres del archivo.
+		$prim_200_caracteres;
+		
+		$posicion = $i;
+		
+		foreach $pal (sort { $escalafon_coseno{$b} <=> $escalafon_coseno{$a} } keys %escalafon_coseno) {
+			if($pal cmp "")
+			{
+				if($i == $numinicio)
+				{					
+					last if($j > $numfin);
+					
+					$lineas_archivo = &obtener_lineas_archivo($pal);
+					$bytes_archivo = &obtener_bytes_archivo($pal);
+					$fecha_creacion = &obtener_fecha_creacion_archivo($pal);
+					$terminos = $terminos_distintos_archivo{$pal};
+					$prim_200_caracteres = &obtener_caracteres_archivo($pal);
+					
+					
+					open(ESCALAFON, '>>'.$prefijoconsulta.'_'.$archivoHTML.'.html');
+						print ESCALAFON "<table border = 1><tr><th>Pos.</th><th>Similitud</th><th>Ruta</th><th>Fecha Creci&oacute;n</th><th>Tama&ntilde;o en Bytes</th><th>N&uacute;mero de l&iacute;neas</th><th>Cantidad de palabras</th></tr>";
+						print ESCALAFON "<tr><td>".$posicion.".</td><td>".$escalafon_coseno{$pal}."</td><td>".$pal."</td><td>".$fecha_creacion."</td><td>".$bytes_archivo."</td><td>".$lineas_archivo."</td><td>".$terminos."</td></tr></table><br>";
+						print ESCALAFON "Vista preliminar del archivo: ".$prim_200_caracteres."<hr><br>";
+					close(ESCALAFON);
+					
+					$j++;
+					$posicion++;
+				}
+				else
+				{
+					$i++;
+				}				
+			}
+		}				
+	}
+	else
+	{
+		print "Error, el escalafon no tiene elementos\n";
+	}
+}
+
+#Se obtiene el número de líneas del archivo
+sub obtener_lineas_archivo
+{
+	my ($dir) = ($_[0]);
+	open(ARCHIVO, $dir);
+	my @temp = <ARCHIVO>;
+	close(ARCHIVO);
+	$lineas_archivo = @temp;
+	$lineas_archivo -= 1;
+	
+	return $lineas_archivo;
+}
+
+#Se obtienen el tamaño en bytes del archivo
+sub obtener_bytes_archivo
+{
+	my ($dir) = ($_[0]);
+	$bytes = -s $dir;
+	
+	return $bytes;
+}
+
+#Se obtiene la fecha de creación del archivo
+sub obtener_fecha_creacion_archivo
+{
+	my ($dir) = ($_[0]);
+	$fecha = ctime( stat($dir)->ctime);
+	
+	return $fecha;
+}
+
+sub obtener_caracteres_archivo
+{
+	my ($dir) = ($_[0]);
+}
+
 #--------------------------MAIN------------------------#
 $comando = shift;
 if($comando eq "generar")
@@ -582,16 +658,24 @@ elsif($comando eq "buscar")
 	}
 	else
 	{
-		@parametros_consulta = split (' ', $consulta);
-		if($parametros_consulta[0] =~ m/[0-9]+/)
+		if(($numinicio <= 0 or $numfin <= 0) and ($numinicio > $numfin))
 		{
-			#Busqueda binaria
+			print "Error, el rango del escalafon tiene que ser positivo"
 		}
 		else
 		{
-			#Busqueda vectorial
-			print "Búsqueda vectorial\n";
-			&busqueda_vectorial
+		
+			@parametros_consulta = split (' ', $consulta);
+			if($parametros_consulta[0] =~ m/[0-9]+/)
+			{
+				#Busqueda binaria
+			}
+			else
+			{
+				#Busqueda vectorial
+				print "Búsqueda vectorial\n";
+				&busqueda_vectorial
+			}
 		}
 	}
 }
