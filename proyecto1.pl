@@ -67,6 +67,11 @@ $escalafon;
 $archivoHTML;
 $consulta;
 @parametros_consulta;
+#mostrar
+$comando_mostrar;
+$archivo_mostrar;
+$posicion_inicial;
+$posicion_final;
 #-------------------------Fin variables-------------------------
 
 #Calcular frecuencias
@@ -118,7 +123,7 @@ sub open_dir{
 	   	if( -d $file){
 			open_dir($file,$hash);
 		}else{
-	   		if($file =~ /\.txt$/){
+	   		if($file =~ /$patron/){
 				#Se incrementa la variable N (Número de documentos)
 				if($bandera_accion == 1){
 					$N++;
@@ -370,7 +375,7 @@ sub busqueda_vectorial
 		print ESCALAFON "</body></html>";
 	close(ESCALAFON);
 	
-	#Se invoca al navegador predeterminado
+	#Se invoca al navegador predeterminado (funciona solo en windows)
 	my @command = ('start', $prefijoconsulta.'_'.$archivoHTML.'.html');
 	system(@command);
 }
@@ -642,6 +647,48 @@ sub obtener_caracteres_archivo
 	return $texto;
 }
 
+#muestra todos los términos entre TérminoInicial y TérminoFinal que aparecen en ArchivoVocabulario para cada término se lista su ni.
+sub mostrar_vocabulario
+{
+	my ($dir) = ($_[0]);
+	open (VOCABULARIO, '<'.$dir);
+	$bandera = 0;
+	print "Vocabulario, Ni\n";
+	while(<VOCABULARIO>)
+	{
+		$linea = $_;
+		$linea = $_;
+		chomp($linea);
+		$linea =~ s/[\(]//g;
+		$linea =~ s/[\)]//g;
+		@arreglo_linea = split(',', $linea);
+		$palabra = $arreglo_linea[0];
+		$ni = $arreglo_linea[1];
+		
+		#Si se encuentra la palabra inicial del rango, continúe imprimiendo.
+		if($palabra eq $posicion_inicial)
+		{
+			$bandera = 1;
+		}
+		
+		#Si se encuentra la palabra final del rango, imprímala y termine el ciclo.
+		if($palabra eq $posicion_final)
+		{
+			print $palabra.", ".$ni."\n";  
+			last;
+		}
+		
+		#Si se encontró la palabra inicial, continúe imprimiendo hasta que se encuentre el final.
+		if($bandera)
+		{
+			print $palabra.", ".$ni."\n";
+		}
+		
+		@arreglo_linea = undef;
+	}
+	close(VOCABULARIO);
+}
+
 #--------------------------MAIN------------------------#
 $comando = shift;
 if($comando eq "generar")
@@ -696,6 +743,26 @@ elsif($comando eq "buscar")
 				print "Búsqueda vectorial\n";
 				&busqueda_vectorial
 			}
+		}
+	}
+}
+elsif($comando eq "mostrar")
+{
+	$comando_mostrar = shift;
+	if($comando_mostrar eq "vocab")
+	{
+		$archivo_mostrar = shift;
+		$posicion_inicial = shift;
+		$posicion_final = shift;
+		
+		if($archivo_mostrar eq "" or $posicion_inicial eq "" or $posicion_final eq "")
+		{
+			print "Error, faltan parametros para mostrar";
+		}
+		else
+		{
+			#Mostrar vocabulario
+			&mostrar_vocabulario($archivo_mostrar);
 		}
 	}
 }
