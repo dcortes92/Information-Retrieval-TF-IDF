@@ -187,7 +187,7 @@ sub abrir_archivo{
 		@palabras = split (' ', $linea);
 		$largo = @palabras;
 		
-		#Para unir las palabras con - al final (Isaac comentar mejor)
+		#Para unir el resto de la palabra detectada en el renglon anterior con - al final 
 		if($bandera == 1){			
 			$primera_palabra = $palabras[0];
 			$palabra_final = $ultima_palabra.$primera_palabra;
@@ -198,7 +198,7 @@ sub abrir_archivo{
 			delete @palabras[0];
 		}
 				
-		#Para unir las palabras con -a al final (Isaac comentar mejor)
+		#Para guardar la palabra con - al final del renglon que posteriormente sera unida con en resto de la palabra
 		if($palabras[$largo-1] =~ m/[a-z0-9_]+­$/){	
 			$palabras[$largo-1] =~ s/­//;
 			$ultima_palabra = $palabras[$largo-1];		
