@@ -67,6 +67,11 @@ $escalafon;
 $archivoHTML;
 $consulta;
 @parametros_consulta;
+
+$cantidad_contadas;
+$cantidad_a_cumplir;
+%archivos_que_cumplen;
+
 #mostrar
 $comando_mostrar;
 $archivo_mostrar;
@@ -123,7 +128,7 @@ sub open_dir{
 	   	if( -d $file){
 			open_dir($file,$hash);
 		}else{
-	   		if($file =~ /$patron/){
+	   		if($file =~ /\.txt$/){
 				#Se incrementa la variable N (Número de documentos)
 				if($bandera_accion == 1){
 					$N++;
@@ -736,6 +741,16 @@ elsif($comando eq "buscar")
 			if($parametros_consulta[0] =~ m/[0-9]+/)
 			{
 				#Busqueda binaria
+				$cantidad_a_cumplir = $parametros_consulta[0];
+				$largo = @parametros_consulta;
+				if($cantidad_a_cumplir > ($largo - 1))
+				{
+					print "Error, la cantidad a coincidir es mayor que la de terminos dados";
+				}
+				else
+				{
+					&busqueda_binaria;
+				}
 			}
 			else
 			{
@@ -770,3 +785,94 @@ else
 {
 	print "Error, comando no reconocido\n";
 }
+
+#---- Este metodo recibe los parametros a buscar en los archivos con la busqueda binaria ----#
+sub busqueda_binaria
+{	
+	print "Buscando los archivos que cumplen la busqueda\n";
+	&comparar_archivos_frecuencias
+}
+
+sub comparar_archivos_frecuencias
+{
+	open(MYFILE, $prefijo."_FC.txt");
+	#Mientras que MYFILE sea distinto de 0
+	while (<MYFILE>)
+	{
+		#Se lee la línea.
+		$linea = $_;
+		$linea =~ s/[\(]//g;
+		$linea =~ s/[\)]//g;
+		$linea =~ s/[\,]/;/g;
+		@palabras_en_linea = split(';', $linea);
+		$ruta_archivo = $palabras_en_linea[0]; #guarda la ruta del archivo en caso de necesitar guardarla
+				
+		$limite_pc = @parametros_consulta;
+		$limite_pl = @palabras_en_linea;
+		$frecuencia_validos;
+		$frecuencia_todos;
+		
+		for($i = 1; $i < $limite_pc; $i++)
+		{
+			$palabra = $parametros_consulta[$i];
+			
+			for($j = 4; $j < $limite_pl; $j++)
+			{
+				$termino = $palabras_en_linea[$j];
+				#print $termino." vs ".$palabra."\n";
+				if($termino == /[0-9]+/)
+				{
+					#print "entre numero ".$termino."\n";
+					$frecuencia_todos += $termino;
+					#print "frecuenciatodos ".$frecuencia_todos."\n";
+				}
+				elsif($termino eq $palabra)
+				{
+					#print "entre iguales\n";
+					$frecuencia_validos += $palabras_en_linea[$j+1];
+					$cantidad_contadas++;
+				}
+			}
+		}
+		
+		if($cantidad_contadas >= $cantidad_a_cumplir)
+		{
+			$escalafon_coseno{$ruta_archivo}; 
+			$escalafon_coseno{$ruta_archivo} = ($frecuencia_validos/log($frecuencia_todos));
+			print "Archivo valido ".$ruta_archivo." ".($frecuencia_validos/log($frecuencia_todos))." \n";
+		}		
+		$frecuencia_validos = 0;
+		$frecuencia_todos = 0;
+		$cantidad_contadas = 0;
+	}
+	close(MYFILE);
+	
+	
+	
+	#Se abre el archivo HTML
+	open(ESCALAFON, '>>'.$prefijoconsulta.'_'.$archivoHTML.'.html');
+		print ESCALAFON "<html><head><title>Resultados b&uacute;squeda</title></head><body>";
+		print ESCALAFON "<h1>Resultados b&uacute;squeda &ldquo;".$consulta."&rdquo;</h1><hr><br>";		
+	close(ESCALAFON);
+	
+	&escribir_archivo_escalafon;
+	
+	print "Creando archivo ".$prefijoconsulta.'_'.$archivoHTML.".html ...\n";
+	&escribir_archivo_HTML;
+	
+	#Cierre del archivo HTML
+	open(ESCALAFON, '>>'.$prefijoconsulta.'_'.$archivoHTML.'.html');
+		print ESCALAFON "</body></html>";
+	close(ESCALAFON);
+	
+	#Se invoca al navegador predeterminado (funciona solo en windows)
+	my @command = ('start', $prefijoconsulta.'_'.$archivoHTML.'.html');
+	system(@command);
+
+	
+	
+	
+	
+	
+}
+
