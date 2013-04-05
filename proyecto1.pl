@@ -682,7 +682,7 @@ sub mostrar_vocabulario
 			$bandera = 1;
 		}
 		
-		#Si se encuentra la palabra final del rango, imprímala y termine el ciclo.
+		#Si se encuentra la palabra final del rango, imprímala y termine el ciclo	.
 		if($palabra eq $posicion_final)
 		{
 			print $palabra.", ".$ni."\n";  
@@ -786,6 +786,37 @@ elsif($comando eq "mostrar")
 			&mostrar_vocabulario($archivo_mostrar);
 		}
 	}
+	elsif($comando_mostrar eq "frec")
+	{
+		$archivo_frecuencias = shift;
+		$ruta_documento = shift;
+		
+		if($archivo_frecuencias eq "" or $ruta_documento eq "")
+		{
+			print "Error, faltan parametros para mostrar";
+		}
+		else
+		{
+			#Mostrar frecuencias
+			&mostrar_frecuencuas($archivo_frecuencias, $ruta_documento);
+		}
+	}
+	elsif($comando_mostrar eq "esca")
+	{
+		$archivo_mostrar = shift;
+		$posicion_inicial = shift;
+		$posicion_final = shift;
+		
+		if($archivo_mostrar eq "" or $posicion_inicial eq "" or $posicion_final eq "")
+		{
+			print "Error, faltan parametros para mostrar";
+		}
+		else
+		{
+			#Mostrar escalafon
+			&mostrar_escalafon();
+		}
+	}
 }
 else
 {
@@ -877,4 +908,61 @@ sub terminar_consulta_binaria
 	#Se invoca al navegador predeterminado (funciona solo en windows)
 	my @command = ('start', $prefijoconsulta.'_'.$archivoHTML.'.html');
 	system(@command);
+}
+
+sub mostrar_frecuencuas
+{
+	my ($archivo_abrir) = ($_[0]);
+	my ($ruta) = ($_[1]);
+	
+	#print $archivo_abrir." ".$ruta."\n";
+	
+	open(FRECUENCIA, "<".$archivo_abrir);
+	while (<FRECUENCIA>)
+	{
+		#Se lee la línea.
+		$linea = $_;
+		$linea =~ s/[\(]//g;
+		$linea =~ s/[\)]//g;
+		$linea =~ s/[\,]/;/g;
+		@palabras_en_linea = split(';', $linea);
+		$ruta_archivo = $palabras_en_linea[0];
+		$limite = @palabras_en_linea;
+		
+		if($ruta_archivo eq $ruta)
+		{
+			print "\n";
+			for($j = 4; $j < $limite-1; $j+=2)
+			{
+				$termino = $palabras_en_linea[$j];
+				$frecuencia = $palabras_en_linea[$j+1];
+				print $termino." --> ".$frecuencia."\n";
+			}
+		}
+	}
+	close(FRECUENCIA);
+}
+
+sub mostrar_escalafon
+{
+	my $texto = read_file($archivo_mostrar);
+	@arreglo_escalafon = split("\n", $texto);
+	$largo = @arreglo_escalafon;
+	#print $largo."\n";
+		#Si se encuentra la palabra inicial del rango, continúe imprimiendo.
+		if($posicion_inicial > $posicion_final)
+		{
+			print "Error, la posicion final es menor que la inicial"
+		}
+		elsif($posicion_inicial > ($largo - 1) || $posicion_final > ($largo - 1))
+		{
+			print "Error el largo del escalafon es menor que los datos que desea mostrar"
+		}
+		else
+		{
+			for($i = $posicion_inicial; $i < $posicion_final + 1; $i++)
+			{
+				print $arreglo_escalafon[$i]."\n";
+			}	
+		}
 }
