@@ -1,7 +1,4 @@
-# ISAAC! Para correr poner perl proyecto1.pl generar stop.txt D:\man.es .txt$ PRU
-# la ruta no importa porque ahorita no funciona el tomar la ruta como parámetro, igual lo del patron .txt$
-# Listo lo de pesos, si empieza con su parte de consultas, por fa seguir formato de abajo de declarar funciones
-# Pongale atencion a la vara de "MAIN" que hay abajo Pura vida mae!!!
+
 
 
 # I Tarea programada
@@ -128,7 +125,7 @@ sub open_dir{
 	   	if( -d $file){
 			open_dir($file,$hash);
 		}else{
-	   		if($file =~ /\.txt$/){
+	   		if($file =~ /$patron/){
 				#Se incrementa la variable N (Número de documentos)
 				if($bandera_accion == 1){
 					$N++;
