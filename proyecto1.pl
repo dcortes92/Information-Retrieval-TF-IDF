@@ -1,8 +1,8 @@
-# ISAAC! Para correr poner perl proyecto1.pl generar stop.txt D:\man.es .txt$ PRU
-# la ruta no importa porque ahorita no funciona el tomar la ruta como parámetro, igual lo del patron .txt$
-# Listo lo de pesos, si empieza con su parte de consultas, por fa seguir formato de abajo de declarar funciones
-# Pongale atencion a la vara de "MAIN" que hay abajo Pura vida mae!!!
-
+#Instrucciones:
+#generar: perl proyecto1.pl stop.txt D:/man.es \.txt$ PRU
+#busqueda vectorial: perl proyecto1.pl buscar vec 1 20 PRU Q1 Rank1 Resultado1 "consulta"
+#mostrar pesos: perl proyecto1.pl mostrar pesos PRU_PE.txt D:/man.es/man1/addr2line.1.txt
+#mostrar vocab: perl proyecto1.pl mostrar vocab PRU_VO.txt aacute abriendo
 
 # I Tarea programada
 # Recuperación de Información Textual
@@ -76,6 +76,7 @@ $comando_mostrar;
 $archivo_mostrar;
 $posicion_inicial;
 $posicion_final;
+$archivo_pesos;
 #-------------------------Fin variables-------------------------
 
 #Calcular frecuencias
@@ -127,7 +128,7 @@ sub open_dir{
 	   	if( -d $file){
 			open_dir($file,$hash);
 		}else{
-	   		if($file =~ /\.txt$/){
+	   		if($file =~ /$patron/){
 				#Se incrementa la variable N (Número de documentos)
 				if($bandera_accion == 1){
 					$N++;
@@ -488,7 +489,8 @@ sub calcular_peso_doci
 	if($norma > 0)
 	{
 		$hash_escalafon{$ruta_archivo} = $numerador / ($norma * $norma_consulta);
-		print "\tCalculada similitud con archivo ".fileparse($ruta_archivo)."\n";
+		system("cls");
+		print "Calculada similitud con archivo ".fileparse($ruta_archivo)."\n";
 	}
 }
 
@@ -658,6 +660,94 @@ sub obtener_caracteres_archivo
 	return $texto;
 }
 
+#---- Este metodo recibe los parametros a buscar en los archivos con la busqueda binaria ----#
+sub busqueda_binaria
+{	
+	print "Buscando los archivos que cumplen la busqueda\n";
+	&comparar_archivos_frecuencias
+}
+
+sub comparar_archivos_frecuencias
+{
+	open(MYFILE, $prefijo."_FC.txt");
+	#Mientras que MYFILE sea distinto de 0
+	while (<MYFILE>)
+	{
+		#Se lee la línea.
+		$linea = $_;
+		$linea =~ s/[\(]//g;
+		$linea =~ s/[\)]//g;
+		$linea =~ s/[\,]/;/g;
+		@palabras_en_linea = split(';', $linea);
+		$ruta_archivo = $palabras_en_linea[0]; #guarda la ruta del archivo en caso de necesitar guardarla
+				
+		$limite_pc = @parametros_consulta;
+		$limite_pl = @palabras_en_linea;
+		$frecuencia_validos;
+		$frecuencia_todos;
+		
+		#Se inicia en 1 para evitar el primer parametro innecesario
+		for($i = 1; $i < $limite_pc; $i++)
+		{
+			$palabra = $parametros_consulta[$i];
+			#Se inicia en 4 para evitar los primeros parametros innecesarios
+			for($j = 4; $j < $limite_pl; $j++)
+			{
+				$termino = $palabras_en_linea[$j];
+				if($termino == /[0-9]+/)
+				{
+					$frecuencia_todos += $termino;
+				}
+				elsif($termino eq $palabra)
+				{
+					#print "entre iguales\n";
+					$frecuencia_validos += $palabras_en_linea[$j+1];
+					$cantidad_contadas++;
+				}
+			}
+		}
+		#Valida si cumple las condiciones para entrar en el escalafon
+		if($cantidad_contadas >= $cantidad_a_cumplir)
+		{
+			$archivos_que_cumplen{$ruta_archivo} = $palabras_en_linea[2];
+			$hash_escalafon{$ruta_archivo} = ($frecuencia_validos/log($frecuencia_todos));
+			print "\t\tArchivo valido ".$ruta_archivo." ".($frecuencia_validos/log($frecuencia_todos))." \n";
+		}		
+		#Se reinician las variables para calcular a otros archivos
+		$frecuencia_validos = 0;
+		$frecuencia_todos = 0;
+		$cantidad_contadas = 0;
+	}
+	close(MYFILE);
+	#Llama la funcion que crea el escalafon y el HTML con el escalafon
+	&terminar_consulta_binaria;		
+}
+
+sub terminar_consulta_binaria
+{
+	#Se abre el archivo HTML
+	open(ESCALAFON, '>>'.$prefijoconsulta.'_'.$archivoHTML.'.html');
+		print ESCALAFON "<html><head><title>Resultados b&uacute;squeda</title></head><body>";
+		print ESCALAFON "<h1>Resultados b&uacute;squeda &ldquo;".$consulta."&rdquo;</h1><hr><br>";		
+	close(ESCALAFON);
+	
+	&escribir_archivo_escalafon;
+	
+	print "Creando archivo ".$prefijoconsulta.'_'.$archivoHTML.".html ...\n";
+	&escribir_archivo_HTML();
+	
+	#Cierre del archivo HTML
+	open(ESCALAFON, '>>'.$prefijoconsulta.'_'.$archivoHTML.'.html');
+		print ESCALAFON "</body></html>";
+	close(ESCALAFON);
+	
+	#Se invoca al navegador predeterminado (funciona solo en windows)
+	my @command = ('start', $prefijoconsulta.'_'.$archivoHTML.'.html');
+	system(@command);
+}
+
+################################## Herramientas Adicionales ###############################
+
 #muestra todos los términos entre TérminoInicial y TérminoFinal que aparecen en ArchivoVocabulario para cada término se lista su ni.
 sub mostrar_vocabulario
 {
@@ -698,6 +788,106 @@ sub mostrar_vocabulario
 		@arreglo_linea = undef;
 	}
 	close(VOCABULARIO);
+}
+
+sub mostrar_frecuencuas
+{
+	my ($archivo_abrir) = ($_[0]);
+	my ($ruta) = ($_[1]);
+	
+	#print $archivo_abrir." ".$ruta."\n";
+	
+	open(FRECUENCIA, "<".$archivo_abrir);
+	while (<FRECUENCIA>)
+	{
+		#Se lee la línea.
+		$linea = $_;
+		$linea =~ s/[\(]//g;
+		$linea =~ s/[\)]//g;
+		$linea =~ s/[\,]/;/g;
+		@palabras_en_linea = split(';', $linea);
+		$ruta_archivo = $palabras_en_linea[0];
+		$limite = @palabras_en_linea;
+		
+		if($ruta_archivo eq $ruta)
+		{
+			print "\n";
+			for($j = 4; $j < $limite-1; $j+=2)
+			{
+				$termino = $palabras_en_linea[$j];
+				$frecuencia = $palabras_en_linea[$j+1];
+				print $termino." --> ".$frecuencia."\n";
+			}
+		}
+	}
+	close(FRECUENCIA);
+}
+
+sub mostrar_escalafon
+{
+	my $texto = read_file($archivo_mostrar);
+	@arreglo_escalafon = split("\n", $texto);
+	$largo = @arreglo_escalafon;
+	#print $largo."\n";
+		#Si se encuentra la palabra inicial del rango, continúe imprimiendo.
+		if($posicion_inicial > $posicion_final)
+		{
+			print "Error, la posicion final es menor que la inicial"
+		}
+		elsif($posicion_inicial > ($largo - 1) || $posicion_final > ($largo - 1))
+		{
+			print "Error el largo del escalafon es menor que los datos que desea mostrar"
+		}
+		else
+		{
+			for($i = $posicion_inicial; $i < $posicion_final + 1; $i++)
+			{
+				print $arreglo_escalafon[$i]."\n";
+			}	
+		}
+}
+
+sub mostrar_pesos
+{
+	my ($archivo_abrir) = ($_[0]);
+	my ($ruta) = ($_[1]);
+	$encontrado = 0;
+	open(PESOS, '<'.$archivo_abrir) or die print "Archivo de pesos no encontrado\n";
+	while(<PESOS>)
+	{
+		#Se lee la línea.
+		$linea = $_;
+		$linea =~ s/[\(]//g;
+		$linea =~ s/[\)]//g;
+		@palabras_en_linea = split(';', $linea);
+		$ruta_recuperada = $palabras_en_linea[0];
+		
+		#Se pregunta si la ruta leída del archivo es la misma que la de que quiere el usuario
+		if($ruta_recuperada eq $ruta)
+		{
+			$encontrado = 1;
+			print "Mostrar pesos del archivo $ruta\n";
+			print "Numero de terminos: ". $palabras_en_linea[1]."\n";
+			print "Termino, peso:\n";
+			$contador = 3;
+			$largo = @palabras_en_linea;
+			
+			while($contador < $largo)
+			{
+				print $palabras_en_linea[$contador]."\n";
+				$contador++;
+			}
+			
+			last;
+		}
+	}
+	
+	close (PESOS);
+	
+	if($encontrado == 0)
+	{
+		print "Ruta no encontrada dentro del archivo de pesos\n";
+	}
 }
 
 #--------------------------MAIN------------------------#
@@ -778,7 +968,7 @@ elsif($comando eq "mostrar")
 		
 		if($archivo_mostrar eq "" or $posicion_inicial eq "" or $posicion_final eq "")
 		{
-			print "Error, faltan parametros para mostrar";
+			print "Error, faltan parametros para mostrar\n";
 		}
 		else
 		{
@@ -793,7 +983,7 @@ elsif($comando eq "mostrar")
 		
 		if($archivo_frecuencias eq "" or $ruta_documento eq "")
 		{
-			print "Error, faltan parametros para mostrar";
+			print "Error, faltan parametros para mostrar\n";
 		}
 		else
 		{
@@ -809,7 +999,7 @@ elsif($comando eq "mostrar")
 		
 		if($archivo_mostrar eq "" or $posicion_inicial eq "" or $posicion_final eq "")
 		{
-			print "Error, faltan parametros para mostrar";
+			print "Error, faltan parametros para mostrar\n";
 		}
 		else
 		{
@@ -817,152 +1007,27 @@ elsif($comando eq "mostrar")
 			&mostrar_escalafon();
 		}
 	}
+	elsif($comando_mostrar eq "pesos")
+	{
+		$archivo_pesos = shift;
+		$archivo_mostrar = shift;
+		
+		if($archivo_pesos eq "" or $archivo_mostrar eq "")
+		{
+			print "Error, faltan parametros para mostrar\n";
+		}
+		else
+		{
+			#mostrar pesos
+			&mostrar_pesos($archivo_pesos, $archivo_mostrar);
+		}
+	}
+	else
+	{
+		print "Error, comando no reconocido\n";
+	}
 }
 else
 {
 	print "Error, comando no reconocido\n";
-}
-
-#---- Este metodo recibe los parametros a buscar en los archivos con la busqueda binaria ----#
-sub busqueda_binaria
-{	
-	print "Buscando los archivos que cumplen la busqueda\n";
-	&comparar_archivos_frecuencias
-}
-
-sub comparar_archivos_frecuencias
-{
-	open(MYFILE, $prefijo."_FC.txt");
-	#Mientras que MYFILE sea distinto de 0
-	while (<MYFILE>)
-	{
-		#Se lee la línea.
-		$linea = $_;
-		$linea =~ s/[\(]//g;
-		$linea =~ s/[\)]//g;
-		$linea =~ s/[\,]/;/g;
-		@palabras_en_linea = split(';', $linea);
-		$ruta_archivo = $palabras_en_linea[0]; #guarda la ruta del archivo en caso de necesitar guardarla
-				
-		$limite_pc = @parametros_consulta;
-		$limite_pl = @palabras_en_linea;
-		$frecuencia_validos;
-		$frecuencia_todos;
-		
-		#Se inicia en 1 para evitar el primer parametro innecesario
-		for($i = 1; $i < $limite_pc; $i++)
-		{
-			$palabra = $parametros_consulta[$i];
-			#Se inicia en 4 para evitar los primeros parametros innecesarios
-			for($j = 4; $j < $limite_pl; $j++)
-			{
-				$termino = $palabras_en_linea[$j];
-				if($termino == /[0-9]+/)
-				{
-					$frecuencia_todos += $termino;
-				}
-				elsif($termino eq $palabra)
-				{
-					#print "entre iguales\n";
-					$frecuencia_validos += $palabras_en_linea[$j+1];
-					$cantidad_contadas++;
-				}
-			}
-		}
-		#Valida si cumple las condiciones para entrar en el escalafon
-		if($cantidad_contadas >= $cantidad_a_cumplir)
-		{
-			$archivos_que_cumplen{$ruta_archivo} = $palabras_en_linea[2];
-			$hash_escalafon{$ruta_archivo} = ($frecuencia_validos/log($frecuencia_todos));
-			print "\t\tArchivo valido ".$ruta_archivo." ".($frecuencia_validos/log($frecuencia_todos))." \n";
-		}		
-		#Se reinician las variables para calcular a otros archivos
-		$frecuencia_validos = 0;
-		$frecuencia_todos = 0;
-		$cantidad_contadas = 0;
-	}
-	close(MYFILE);
-	#Llama la funcion que crea el escalafon y el HTML con el escalafon
-	&terminar_consulta_binaria;		
-}
-
-
-sub terminar_consulta_binaria
-{
-	#Se abre el archivo HTML
-	open(ESCALAFON, '>>'.$prefijoconsulta.'_'.$archivoHTML.'.html');
-		print ESCALAFON "<html><head><title>Resultados b&uacute;squeda</title></head><body>";
-		print ESCALAFON "<h1>Resultados b&uacute;squeda &ldquo;".$consulta."&rdquo;</h1><hr><br>";		
-	close(ESCALAFON);
-	
-	&escribir_archivo_escalafon;
-	
-	print "Creando archivo ".$prefijoconsulta.'_'.$archivoHTML.".html ...\n";
-	&escribir_archivo_HTML();
-	
-	#Cierre del archivo HTML
-	open(ESCALAFON, '>>'.$prefijoconsulta.'_'.$archivoHTML.'.html');
-		print ESCALAFON "</body></html>";
-	close(ESCALAFON);
-	
-	#Se invoca al navegador predeterminado (funciona solo en windows)
-	my @command = ('start', $prefijoconsulta.'_'.$archivoHTML.'.html');
-	system(@command);
-}
-
-sub mostrar_frecuencuas
-{
-	my ($archivo_abrir) = ($_[0]);
-	my ($ruta) = ($_[1]);
-	
-	#print $archivo_abrir." ".$ruta."\n";
-	
-	open(FRECUENCIA, "<".$archivo_abrir);
-	while (<FRECUENCIA>)
-	{
-		#Se lee la línea.
-		$linea = $_;
-		$linea =~ s/[\(]//g;
-		$linea =~ s/[\)]//g;
-		$linea =~ s/[\,]/;/g;
-		@palabras_en_linea = split(';', $linea);
-		$ruta_archivo = $palabras_en_linea[0];
-		$limite = @palabras_en_linea;
-		
-		if($ruta_archivo eq $ruta)
-		{
-			print "\n";
-			for($j = 4; $j < $limite-1; $j+=2)
-			{
-				$termino = $palabras_en_linea[$j];
-				$frecuencia = $palabras_en_linea[$j+1];
-				print $termino." --> ".$frecuencia."\n";
-			}
-		}
-	}
-	close(FRECUENCIA);
-}
-
-sub mostrar_escalafon
-{
-	my $texto = read_file($archivo_mostrar);
-	@arreglo_escalafon = split("\n", $texto);
-	$largo = @arreglo_escalafon;
-	#print $largo."\n";
-		#Si se encuentra la palabra inicial del rango, continúe imprimiendo.
-		if($posicion_inicial > $posicion_final)
-		{
-			print "Error, la posicion final es menor que la inicial"
-		}
-		elsif($posicion_inicial > ($largo - 1) || $posicion_final > ($largo - 1))
-		{
-			print "Error el largo del escalafon es menor que los datos que desea mostrar"
-		}
-		else
-		{
-			for($i = $posicion_inicial; $i < $posicion_final + 1; $i++)
-			{
-				print $arreglo_escalafon[$i]."\n";
-			}	
-		}
 }
