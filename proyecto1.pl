@@ -1,5 +1,8 @@
-
-
+#Instrucciones:
+#generar: perl proyecto1.pl stop.txt D:/man.es \.txt$ PRU
+#busqueda vectorial: perl proyecto1.pl buscar vec 1 20 PRU Q1 Rank1 Resultado1 "consulta"
+#mostrar pesos: perl proyecto1.pl mostrar pesos PRU_PE.txt D:/man.es/man1/addr2line.1.txt
+#mostrar vocab: perl proyecto1.pl mostrar vocab PRU_VO.txt aacute abriendo
 
 # I Tarea programada
 # Recuperación de Información Textual
