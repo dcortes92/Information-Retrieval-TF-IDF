@@ -757,7 +757,7 @@ elsif($comando eq "mostrar")
 		
 		if($archivo_mostrar eq "" or $posicion_inicial eq "" or $posicion_final eq "")
 		{
-			print "Error, faltan parametros para mostrar";
+			print "Error, faltan parametros para mostrar\n";
 		}
 		else
 		{
