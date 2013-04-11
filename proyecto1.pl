@@ -932,7 +932,42 @@ elsif($comando eq "buscar")
 		}
 		else
 		{
-		
+			$consulta =~ tr/A-Z/a-z/;	
+			$consulta =~ tr/áéíóúüÁÉÍÓÚÜ/aeiouuaeiouu/;
+			$consulta =~ s/[\.]/ /g;
+			$consulta =~ s/[\;]/ /g;
+			$consulta =~ s/[\,]/ /g;
+			$consulta =~ s/[\(]/ /g;
+			$consulta =~ s/[\)]/ /g;
+			$consulta =~ s/[\[]/ /g;
+			$consulta =~ s/[\]]/ /g;
+			$consulta =~ s/[\{]/ /g;
+			$consulta =~ s/[\}]/ /g;
+			$consulta =~ s/[\:]/ /g;
+			$consulta =~ s/[\¡]/ /g;
+			$consulta =~ s/[\!]/ /g;
+			$consulta =~ s/[\@]/ /g;
+			$consulta =~ s/[\#]/ /g;
+			$consulta =~ s/[\$]/ /g;
+			$consulta =~ s/[\%]/ /g;
+			$consulta =~ s/[\^]/ /g;
+			$consulta =~ s/[\&]/ /g;
+			$consulta =~ s/[\*]/ /g;
+			$consulta =~ s/[\=]/ /g;
+			$consulta =~ s/[\\]/ /g;
+			$consulta =~ s/[\"]/ /g;
+			$consulta =~ s/[\¿]/ /g;
+			$consulta =~ s/[\?]/ /g;
+			$consulta =~ s/[\<]/ /g;
+			$consulta =~ s/[\>]/ /g;
+			$consulta =~ s/[\']/ /g;
+			$consulta =~ s/[\`]/ /g;
+			$consulta =~ s/[\|]/ /g;
+			$consulta =~ s/[\/]/ /g;
+			$consulta =~ s/[\+]/ /g;
+			$consulta =~ s/[\~]/ /g;		
+			$consulta =~ s/-//g;
+				
 			@parametros_consulta = split (' ', $consulta);
 			if($parametros_consulta[0] =~ m/[0-9]+/ & $modalidad =~"min")
 			{
