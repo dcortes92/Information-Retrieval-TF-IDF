@@ -1,7 +1,4 @@
 rit1
 ====
 
-I Tarea Programada RIT - Modificación
-
-
-asds
+I Tarea Programada RIT
